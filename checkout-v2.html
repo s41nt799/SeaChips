@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Оформление заказа — Sea Chips</title>
+  <link rel="stylesheet" href="css/sea-chips.css" />
+  <link rel="stylesheet" href="css/sea-chips-v2.css" />
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = 'https://yaukapdyrbefzrifqifa.supabase.co'
+    const supabaseKey = 'sb_publishable_KbCQKRekMG883j7KYPz9EQ_Wei3_HeH'
+    window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+  </script>
+  
+  <style>
+    .checkout-v2-page { padding: 32px 0 48px; }
+    .checkout-v2-page h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .checkout-v2-subtitle {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    .checkout-wizard-steps {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      justify-content: center;
+    }
+    .checkout-wizard-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.3s;
+    }
+    .checkout-wizard-step.active {
+      border-color: var(--sea);
+      background: var(--sea-light);
+      color: var(--sea-dark);
+    }
+    .checkout-wizard-step.done {
+      border-color: var(--success);
+      background: var(--sea-light);
+      color: var(--success);
+    }
+    .checkout-wizard-step__num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .checkout-wizard-step.active .checkout-wizard-step__num {
+      background: var(--sea);
+      color: white;
+    }
+    .checkout-wizard-step.done .checkout-wizard-step__num {
+      background: var(--success);
+      color: white;
+    }
+    
+    .checkout-v2-layout {
+      display: grid;
+      gap: 32px;
+    }
+    .checkout-panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .checkout-panel.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .checkout-panel h2 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .checkout-panel__nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 6px;
+    }
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      transition: border-color 0.2s;
+      background: var(--surface);
+      color: var(--foreground);
+    }
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--sea);
+    }
+    .form-input.error, .form-textarea.error {
+      border-color: #dc2626;
+    }
+    .form-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    
+    .delivery-options-v2 {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .delivery-option-v2 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .delivery-option-v2:has(input:checked) {
+      border-color: var(--sea);
+      background: var(--sea-light);
+    }
+    .delivery-option-v2 input { accent-color: var(--sea); width: 18px; height: 18px; flex-shrink: 0; }
+    .delivery-option-v2__info { flex: 1; }
+    .delivery-option-v2__info strong { display: block; font-size: 0.9375rem; }
+    .delivery-option-v2__info span { font-size: 0.8125rem; color: var(--muted); }
+    .delivery-option-v2__price { font-weight: 700; font-size: 0.9375rem; }
+    .delivery-option-v2__price.is-free { color: var(--success); }
+    
+    .address-fields.is-hidden { display: none; }
+    .pickup-note.is-hidden { display: none; }
+    .pickup-note {
+      padding: 16px;
+      background: var(--sea-light);
+      border-radius: var(--radius);
+      color: var(--sea-dark);
+      font-size: 0.875rem;
+      margin-top: 12px;
+    }
+    
+    .time-slots {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+    }
+    .time-slot {
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface);
+    }
+    .time-slot.active {
+      border-color: var(--sea);
+      background: var(--sea-light);
+      color: var(--sea-dark);
+    }
+    
+    .payment-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 600px) {
+      .payment-grid { grid-template-columns: 1fr; }
+    }
+    .payment-card {
+      padding: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .payment-card:has(input:checked) {
+      border-color: var(--sea);
+      background: var(--sea-light);
+    }
+    .payment-card input { accent-color: var(--sea); width: 18px; height: 18px; }
+    .payment-card__label { flex: 1; font-weight: 500; font-size: 0.875rem; }
+    .payment-card__badges { display: flex; gap: 4px; }
+    .payment-card__badges span {
+      padding: 2px 8px;
+      background: var(--surface);
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+    
+    .card-fields-v2 {
+      display: none;
+      padding: 16px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-top: 12px;
+    }
+    .card-fields-v2__secure {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 12px;
+      text-align: center;
+    }
+    
+    .trust-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    @media (max-width: 600px) {
+      .trust-row { grid-template-columns: 1fr; }
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+    }
+    .trust-item__icon { font-size: 1.25rem; }
+    
+    .checkout-mini-items {
+      margin-bottom: 16px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .checkout-mini-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+    .checkout-mini-item__photo {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .checkout-mini-item__photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .checkout-mini-item__info { flex: 1; }
+    .checkout-mini-item__name { font-weight: 500; }
+    .checkout-mini-item__qty { font-size: 0.75rem; color: var(--muted); }
+    .checkout-mini-item__price { font-weight: 600; }
+    
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 0.9375rem;
+    }
+    .summary-line--total {
+      font-weight: 700;
+      font-size: 1.125rem;
+      border-top: 2px solid var(--border);
+      padding-top: 12px;
+      margin-top: 8px;
+    }
+    .summary-savings-badge {
+      background: var(--sea-light);
+      color: var(--sea-dark);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      text-align: center;
+      margin-top: 12px;
+      display: none;
+    }
+    
+    .checkout-guarantees {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .checkout-guarantee {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+    
+    .summary-sticky-wrap {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+    }
+    .summary-sticky {
+      background: var(--surface);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+    .summary-sticky__title {
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      margin-bottom: 16px;
+    }
+    
+    .btn-block { width: 100%; }
+    .btn.is-loading {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+    
+    .mobile-checkout-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      gap: 16px;
+    }
+    .mobile-checkout-bar__info { display: flex; flex-direction: column; }
+    .mobile-checkout-bar__label { font-size: 0.75rem; color: var(--muted); }
+    .mobile-checkout-bar__total {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    
+    .success-overlay-v2 {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .success-overlay-v2.show { display: flex; }
+    .success-card-v2 {
+      background: white;
+      padding: 48px 40px;
+      border-radius: var(--radius-lg);
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .success-card-v2__icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--sea-light);
+      color: var(--sea);
+      font-size: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .success-card-v2 h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    .success-card-v2 p {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    
+    .cart-badge {
+      background: var(--sea);
+      color: white;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: -6px;
+      right: -8px;
+    }
+    .icon-btn { position: relative; }
+    
+    @media (min-width: 900px) {
+      .checkout-v2-layout { grid-template-columns: 1fr 360px; align-items: start; }
+      .mobile-checkout-bar { display: none !important; }
+    }
+    @media (max-width: 899px) {
+      .summary-sticky-wrap { display: none; }
+    }
+  </style>
+</head>
+<body class="page-with-mobile-bar">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="home.html" class="logo">
+      <span class="logo-mark">🌊</span>
+      Sea Chips
+    </a>
+    <nav class="nav-desktop">
+      <a href="home.html">Главная</a>
+      <a href="catalog.html">Каталог</a>
+      <a href="cart-v2.html">Корзина</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart-v2.html" class="icon-btn" aria-label="Корзина">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 9H7.5L6 6z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M6 6L5 3H2"/></svg>
+        <span class="cart-badge">0</span>
+      </a>
+      <button class="icon-btn menu-toggle" aria-label="Меню">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" aria-label="Мобильное меню">
+  <button class="icon-btn mobile-nav-close" aria-label="Закрыть">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <a href="home.html">Главная</a>
+  <a href="catalog.html">Каталог</a>
+  <a href="cart-v2.html">Корзина</a>
+</nav>
+
+<main class="container checkout-v2-page">
+  <h1>Оформление заказа</h1>
+  <p class="checkout-v2-subtitle">Безопасная оплата · доставка по всей России</p>
+
+  <div id="checkout-empty" style="display:none;text-align:center;padding:48px;">
+    <p style="margin-bottom:16px;">Корзина пуста — добавьте товары для оформления</p>
+    <a href="catalog.html" class="btn btn-primary">В каталог</a>
+  </div>
+
+  <div id="checkout-main" style="display:none;">
+    <!-- Шаги -->
+    <div class="checkout-wizard-steps" role="tablist">
+      <div class="checkout-wizard-step active" data-step="1" role="tab">
+        <span class="checkout-wizard-step__num">1</span>
+        <span>Контакты</span>
+      </div>
+      <div class="checkout-wizard-step" data-step="2" role="tab">
+        <span class="checkout-wizard-step__num">2</span>
+        <span>Доставка</span>
+      </div>
+      <div class="checkout-wizard-step" data-step="3" role="tab">
+        <span class="checkout-wizard-step__num">3</span>
+        <span>Оплата</span>
+      </div>
+    </div>
+
+    <div class="checkout-v2-layout">
+      <form id="checkout-form" novalidate>
+        <!-- Шаг 1: Контакты -->
+        <section class="checkout-panel active" data-panel="1">
+          <h2>Контактные данные</h2>
+          <div class="form-group">
+            <label class="form-label" for="name">Имя *</label>
+            <input type="text" class="form-input" id="name" placeholder="Анна" required autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Телефон *</label>
+            <input type="tel" class="form-input" id="phone" placeholder="+7 (999) 123-45-67" required autocomplete="tel" inputmode="tel" />
+            <p class="form-hint">Для SMS о статусе заказа</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" class="form-input" id="email" placeholder="anna@email.ru" autocomplete="email" />
+            <p class="form-hint">Отправим чек и подтверждение</p>
+          </div>
+          <div class="checkout-panel__nav">
+            <a href="cart-v2.html" class="btn btn-secondary">← Корзина</a>
+            <button type="button" class="btn btn-primary" data-next="2">Далее — доставка</button>
+          </div>
+        </section>
+
+        <!-- Шаг 2: Доставка -->
+        <section class="checkout-panel" data-panel="2">
+          <h2>Способ доставки</h2>
+          <div class="delivery-options-v2" id="checkout-delivery"></div>
+
+          <div class="address-fields" id="address-fields">
+            <div class="form-group">
+              <label class="form-label" for="city">Город</label>
+              <input type="text" class="form-input" id="city" value="Москва" autocomplete="address-level2" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="address">Адрес *</label>
+              <input type="text" class="form-input" id="address" placeholder="ул. Примерная, д. 12, кв. 45" autocomplete="street-address" />
+            </div>
+            <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;">
+              <div class="form-group" style="margin:0;">
+                <label class="form-label" for="entrance">Подъезд</label>
+                <input type="text" class="form-input" id="entrance" placeholder="2" />
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="form-label" for="floor">Этаж</label>
+                <input type="text" class="form-input" id="floor" placeholder="5" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="comment">Комментарий курьеру</label>
+              <textarea class="form-textarea" id="comment" rows="2" placeholder="Домофон не работает"></textarea>
+            </div>
+          </div>
+
+          <div class="pickup-note is-hidden" id="pickup-note">
+            📍 Пункт выдачи: ул. Морская, 14 · режим 10:00–21:00. SMS с кодом придёт после оплаты.
+          </div>
+
+          <div class="form-group" style="margin-top:20px;">
+            <label class="form-label">Время доставки</label>
+            <div class="time-slots" id="time-slots">
+              <button type="button" class="time-slot active" data-slot="10:00–14:00">10:00 – 14:00</button>
+              <button type="button" class="time-slot" data-slot="14:00–18:00">14:00 – 18:00</button>
+              <button type="button" class="time-slot" data-slot="18:00–22:00">18:00 – 22:00</button>
+            </div>
+          </div>
+
+          <div class="checkout-panel__nav">
+            <button type="button" class="btn btn-secondary" data-prev="1">Назад</button>
+            <button type="button" class="btn btn-primary" data-next="3">Далее — оплата</button>
+          </div>
+        </section>
+
+        <!-- Шаг 3: Оплата -->
+        <section class="checkout-panel" data-panel="3">
+          <h2>Способ оплаты</h2>
+
+          <div class="payment-grid">
+            <label class="payment-card">
+              <input type="radio" name="payment" value="card" checked />
+              <span class="payment-card__label">Банковская карта</span>
+              <span class="payment-card__badges"><span>MIR</span><span>MC</span></span>
+            </label>
+            <label class="payment-card">
+              <input type="radio" name="payment" value="sbp" />
+              <span class="payment-card__label">СБП</span>
+              <span class="payment-card__badges"><span>СБП</span></span>
+            </label>
+            <label class="payment-card">
+              <input type="radio" name="payment" value="apple" />
+              <span class="payment-card__label">Apple Pay</span>
+              <span class="payment-card__badges"><span>🍎</span></span>
+            </label>
+            <label class="payment-card">
+              <input type="radio" name="payment" value="google" />
+              <span class="payment-card__label">Google Pay</span>
+              <span class="payment-card__badges"><span>G</span></span>
+            </label>
+          </div>
+
+          <div class="card-fields-v2" id="card-fields">
+            <div class="form-group" style="margin-bottom:16px;">
+              <label class="form-label" for="card-number">Номер карты</label>
+              <input type="text" class="form-input" id="card-number" placeholder="0000 0000 0000 0000" maxlength="19" inputmode="numeric" autocomplete="cc-number" />
+            </div>
+            <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;">
+              <div class="form-group" style="margin:0;">
+                <label class="form-label" for="card-exp">Срок</label>
+                <input type="text" class="form-input" id="card-exp" placeholder="MM/YY" maxlength="5" inputmode="numeric" autocomplete="cc-exp" />
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="form-label" for="card-cvc">CVC</label>
+                <input type="text" class="form-input" id="card-cvc" placeholder="•••" maxlength="3" inputmode="numeric" autocomplete="cc-csc" />
+              </div>
+            </div>
+            <div class="card-fields-v2__secure">🔒 Данные карты шифруются по стандарту PCI DSS</div>
+          </div>
+
+          <div class="trust-row">
+            <div class="trust-item"><span class="trust-item__icon">🔒</span> Безопасная оплата</div>
+            <div class="trust-item"><span class="trust-item__icon">🛡️</span> Защищённое соединение SSL</div>
+            <div class="trust-item"><span class="trust-item__icon">🚚</span> Быстрая доставка 1–2 дня</div>
+          </div>
+
+          <div class="checkout-panel__nav">
+            <button type="button" class="btn btn-secondary" data-prev="2">Назад</button>
+            <button type="submit" class="btn btn-primary" id="pay-btn">Оплатить заказ</button>
+          </div>
+        </section>
+      </form>
+
+      <!-- Sidebar summary -->
+      <aside class="summary-sticky-wrap">
+        <div class="summary-sticky">
+          <h3 class="summary-sticky__title">Ваш заказ</h3>
+          <div class="checkout-mini-items" id="checkout-items"></div>
+          <div id="checkout-summary-rows"></div>
+          <div class="summary-savings-badge" id="checkout-savings"></div>
+
+          <div class="checkout-guarantees">
+            <div class="checkout-guarantee">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1L2 4v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V4L9 1z"/></svg>
+              Гарантия возврата 14 дней
+            </div>
+            <div class="checkout-guarantee">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="12" height="9" rx="1"/><path d="M7 7V5a2 2 0 014 0v2"/></svg>
+              Безопасная оплата
+            </div>
+            <div class="checkout-guarantee">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 9h16M1 9l4-4M1 9l4 4M17 9l-4-4M17 9l-4 4"/></svg>
+              Доставка по всей России
+            </div>
+          </div>
+
+          <p style="font-size:0.75rem;color:var(--muted);text-align:center;margin-top:16px;">Нажимая «Оплатить», вы соглашаетесь с условиями оферты</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<!-- Mobile sticky bar -->
+<div class="mobile-checkout-bar" id="mobile-bar" style="display:none;">
+  <div class="mobile-checkout-bar__info">
+    <span class="mobile-checkout-bar__label" id="mobile-step-label">Шаг 1 из 3</span>
+    <span class="mobile-checkout-bar__total" id="mobile-total">0 ₽</span>
+  </div>
+  <button type="button" class="btn btn-primary" id="mobile-action">Далее</button>
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay-v2" id="success-overlay">
+  <div class="success-card-v2">
+    <div class="success-card-v2__icon">✓</div>
+    <h2>Заказ оформлен!</h2>
+    <p id="success-message">Мы отправим SMS с номером заказа. Спасибо, что выбрали Sea Chips!</p>
+    <a href="home.html" class="btn btn-primary">На главную</a>
+  </div>
+</div>
+
+<script src="js/sea-chips.js"></script>
+<script src="js/order-service.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Загружаем товары
+    await SeaChips.loadProducts();
+    
+    var cart = SeaChips.getCart();
+    var main = document.getElementById('checkout-main');
+    var empty = document.getElementById('checkout-empty');
+    var currentStep = 1;
+    var selectedSlot = '10:00–14:00';
+    var deliveryType = 'courier';
+    var promoApplied = false;
+    var discountAmount = 0;
+
+    if (!cart || !cart.length) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    main.style.display = 'block';
+    document.getElementById('mobile-bar').style.display = 'flex';
+    updateMobileBar();
+
+    // ========== ИТОГО ==========
+    function calculateOrder() {
+      var subtotal = SeaChips.getCartTotal() || 0;
+      var delivery = getDeliveryPrice();
+      var discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
+      var total = subtotal - discount + delivery;
+      return { subtotal, delivery, discount, total };
+    }
+
+    function getDeliveryPrice() {
+      var subtotal = SeaChips.getCartTotal() || 0;
+      var prices = { courier: 299, pickup: 149, express: 499 };
+      if (subtotal >= 1500 && deliveryType !== 'express') return 0;
+      return prices[deliveryType] || 0;
+    }
+
+    function renderSummary() {
+      var order = calculateOrder();
+      var itemsEl = document.getElementById('checkout-items');
+      var html = '';
+      var cart = SeaChips.getCart();
+
+      cart.forEach(function(item) {
+        var p = SeaChips.getProductById(item.id);
+        if (!p) return;
+        html +=
+          '<div class="checkout-mini-item">' +
+            '<div class="checkout-mini-item__photo">' +
+              '<img src="' + (p.image || '/images/placeholder.jpg') + '" alt="' + p.name + '" onerror="this.style.display=\'none\'">' +
+            '</div>' +
+            '<div class="checkout-mini-item__info">' +
+              '<div class="checkout-mini-item__name">' + p.name + '</div>' +
+              '<div class="checkout-mini-item__qty">' + item.qty + ' × ' + SeaChips.formatPrice(p.price) + '</div>' +
+            '</div>' +
+            '<span class="checkout-mini-item__price">' + SeaChips.formatPrice(p.price * item.qty) + '</span>' +
+          '</div>';
+      });
+
+      itemsEl.innerHTML = html;
+
+      var summaryEl = document.getElementById('checkout-summary-rows');
+      if (summaryEl) {
+        summaryEl.innerHTML =
+          '<div class="summary-line"><span>Товары</span><span>' + SeaChips.formatPrice(order.subtotal) + '</span></div>' +
+          (order.discount ? '<div class="summary-line"><span>Скидка</span><span style="color:#16a34a;">−' + SeaChips.formatPrice(order.discount) + '</span></div>' : '') +
+          '<div class="summary-line"><span>Доставка</span><span>' + (order.delivery ? SeaChips.formatPrice(order.delivery) : 'Бесплатно') + '</span></div>' +
+          '<div class="summary-line summary-line--total"><span>Итого</span><span>' + SeaChips.formatPrice(order.total) + '</span></div>';
+      }
+
+      var savings = document.getElementById('checkout-savings');
+      if (order.discount) {
+        savings.textContent = 'Вы экономите ' + SeaChips.formatPrice(order.discount);
+        savings.style.display = 'block';
+      } else {
+        savings.style.display = 'none';
+      }
+
+      document.getElementById('mobile-total').textContent = SeaChips.formatPrice(order.total);
+      document.getElementById('pay-btn').textContent = 'Оплатить ' + SeaChips.formatPrice(order.total);
+    }
+
+    function updateMobileBar() {
+      var labels = ['Шаг 1 из 3', 'Шаг 2 из 3', 'Шаг 3 из 3'];
+      var actions = ['Далее', 'Далее', 'Оплатить'];
+      document.getElementById('mobile-step-label').textContent = labels[currentStep - 1];
+      document.getElementById('mobile-action').textContent = actions[currentStep - 1];
+    }
+
+    // ========== ДОСТАВКА ==========
+    function renderDeliveryOptions() {
+      var container = document.getElementById('checkout-delivery');
+      var options = [
+        { key: 'courier', label: 'Курьером', eta: 'Завтра, 10:00–22:00', price: 299 },
+        { key: 'pickup', label: 'Пункт выдачи', eta: '1–2 дня', price: 149 },
+        { key: 'express', label: 'Экспресс', eta: 'Сегодня, 2–4 часа', price: 499 }
+      ];
+
+      var subtotal = SeaChips.getCartTotal() || 0;
+      var html = '';
+      options.forEach(function(opt) {
+        var isFree = subtotal >= 1500 && opt.key !== 'express';
+        var priceText = isFree ? 'Бесплатно' : SeaChips.formatPrice(opt.price);
+        var priceClass = isFree ? ' delivery-option-v2__price is-free' : ' delivery-option-v2__price';
+
+        html +=
+          '<label class="delivery-option-v2">' +
+            '<input type="radio" name="checkout-delivery" value="' + opt.key + '"' + (deliveryType === opt.key ? ' checked' : '') + ' />' +
+            '<div class="delivery-option-v2__info">' +
+              '<strong>' + opt.label + '</strong>' +
+              '<span>' + opt.eta + '</span>' +
+            '</div>' +
+            '<span class="' + priceClass.trim() + '">' + priceText + '</span>' +
+          '</label>';
+      });
+
+      container.innerHTML = html;
+      updateAddressVisibility(deliveryType);
+
+      container.querySelectorAll('input[name="checkout-delivery"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+          deliveryType = radio.value;
+          updateAddressVisibility(deliveryType);
+          renderSummary();
+        });
+      });
+    }
+
+    function updateAddressVisibility(type) {
+      var addressFields = document.getElementById('address-fields');
+      var pickupNote = document.getElementById('pickup-note');
+      if (type === 'pickup') {
+        addressFields.classList.add('is-hidden');
+        pickupNote.classList.remove('is-hidden');
+      } else {
+        addressFields.classList.remove('is-hidden');
+        pickupNote.classList.add('is-hidden');
+      }
+    }
+
+    // ========== ШАГИ ==========
+    function goToStep(step) {
+      currentStep = step;
+      document.querySelectorAll('.checkout-panel').forEach(function(p) {
+        p.classList.toggle('active', parseInt(p.dataset.panel) === step);
+      });
+      document.querySelectorAll('.checkout-wizard-step').forEach(function(s) {
+        var n = parseInt(s.dataset.step);
+        s.classList.remove('active', 'done');
+        if (n < step) s.classList.add('done');
+        if (n === step) s.classList.add('active');
+      });
+      updateMobileBar();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function validateStep(step) {
+      if (step === 1) {
+        var name = document.getElementById('name');
+        var phone = document.getElementById('phone');
+        var valid = true;
+        [name, phone].forEach(function(el) { el.classList.remove('error'); });
+        if (!name.value.trim()) { name.classList.add('error'); valid = false; }
+        if (phone.value.replace(/\D/g, '').length < 10) { phone.classList.add('error'); valid = false; }
+        if (!valid) SeaChips.showToast('Заполните контактные данные');
+        return valid;
+      }
+      if (step === 2 && deliveryType !== 'pickup') {
+        var address = document.getElementById('address');
+        address.classList.remove('error');
+        if (!address.value.trim()) {
+          address.classList.add('error');
+          SeaChips.showToast('Укажите адрес доставки');
+          return false;
+        }
+      }
+      return true;
+    }
+
+    document.querySelectorAll('[data-next]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var next = parseInt(btn.getAttribute('data-next'));
+        if (validateStep(currentStep)) goToStep(next);
+      });
+    });
+
+    document.querySelectorAll('[data-prev]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        goToStep(parseInt(btn.getAttribute('data-prev')));
+      });
+    });
+
+    document.getElementById('mobile-action').addEventListener('click', function() {
+      if (currentStep < 3) {
+        if (validateStep(currentStep)) goToStep(currentStep + 1);
+      } else {
+        document.getElementById('checkout-form').requestSubmit();
+      }
+    });
+
+    // ========== ВРЕМЯ ==========
+    document.querySelectorAll('.time-slot').forEach(function(slot) {
+      slot.addEventListener('click', function() {
+        document.querySelectorAll('.time-slot').forEach(function(s) {
+          s.classList.remove('active');
+        });
+        slot.classList.add('active');
+        selectedSlot = slot.dataset.slot;
+      });
+    });
+
+    // ========== ОПЛАТА ==========
+    document.querySelectorAll('input[name="payment"]').forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        document.getElementById('card-fields').style.display = radio.value === 'card' ? 'block' : 'none';
+      });
+    });
+
+    // ========== МАСКА ТЕЛЕФОНА ==========
+    document.getElementById('phone').addEventListener('input', function(e) {
+      var v = e.target.value.replace(/\D/g, '');
+      if (v.startsWith('8')) v = '7' + v.slice(1);
+      if (!v.startsWith('7') && v.length) v = '7' + v;
+      var formatted = '+7';
+      if (v.length > 1) formatted += ' (' + v.slice(1, 4);
+      if (v.length >= 4) formatted += ') ' + v.slice(4, 7);
+      if (v.length >= 7) formatted += '-' + v.slice(7, 9);
+      if (v.length >= 9) formatted += '-' + v.slice(9, 11);
+      e.target.value = formatted;
+    });
+
+    // ========== НОМЕР КАРТЫ ==========
+    document.getElementById('card-number').addEventListener('input', function(e) {
+      var v = e.target.value.replace(/\D/g, '').slice(0, 16);
+      e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+    });
+
+    // ========== ОТПРАВКА ЗАКАЗА ==========
+    document.getElementById('checkout-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (!validateStep(1) || !validateStep(2)) {
+        if (!validateStep(1)) goToStep(1);
+        else if (!validateStep(2)) goToStep(2);
+        return;
+      }
+
+      var paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+      
+      if (paymentMethod === 'card') {
+        var card = document.getElementById('card-number');
+        if (card.value.replace(/\s/g, '').length < 16) {
+          card.classList.add('error');
+          goToStep(3);
+          SeaChips.showToast('Введите номер карты');
+          return;
+        }
+      }
+
+      // Собираем данные
+      var order = calculateOrder();
+      var cartItems = SeaChips.getCart().map(function(item) {
+        var p = SeaChips.getProductById(item.id);
+        return {
+          id: item.id,
+          name: p ? p.name : 'Товар',
+          price: p ? p.price : 0,
+          qty: item.qty,
+          lineTotal: (p ? p.price : 0) * item.qty
+        };
+      });
+
+      var orderData = {
+        order_number: OrderService.generateOrderNumber(),
+        customer_name: document.getElementById('name').value.trim(),
+        customer_phone: document.getElementById('phone').value.trim(),
+        customer_email: document.getElementById('email').value.trim() || '',
+        delivery_method: deliveryType,
+        delivery_address: deliveryType === 'pickup' ? 'Пункт выдачи: ул. Морская, 14' : document.getElementById('address').value.trim(),
+        delivery_slot: selectedSlot,
+        payment_method: paymentMethod,
+        items: cartItems,
+        subtotal: order.subtotal,
+        discount: order.discount,
+        delivery_price: order.delivery,
+        total: order.total,
+        status: 'pending'
+      };
+
+      console.log('📦 Отправка заказа:', orderData);
+
+      try {
+        // Показываем загрузку
+        var payBtn = document.getElementById('pay-btn');
+        payBtn.textContent = '⏳ Обработка...';
+        payBtn.disabled = true;
+
+        // Отправляем заказ
+        // try {
+//   await this.sendEmailNotification(orderData);
+// } catch (e) {
+//   console.warn('⚠️ Email не отправлен:', e.message);
+// }
+        var result = await OrderService.submitOrder(orderData);
+        console.log('✅ Заказ сохранён:', result);
+
+        // Очищаем корзину
+        SeaChips.clearCart();
+
+        // Показываем успех
+        document.getElementById('success-message').textContent = 
+          document.getElementById('name').value.trim() + ', заказ #' + result.order_number + ' принят! SMS с номером придёт в течение минуты.';
+
+        var overlay = document.getElementById('success-overlay');
+        overlay.classList.add('show');
+
+      } catch (error) {
+        console.error('❌ Ошибка:', error);
+        SeaChips.showToast('Ошибка при оформлении заказа. Попробуйте ещё раз.');
+        payBtn.textContent = 'Оплатить заказ';
+        payBtn.disabled = false;
+      }
+    });
+
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    renderDeliveryOptions();
+    renderSummary();
+    
+    window.addEventListener('cart:updated', function() {
+      renderSummary();
+    });
+  });
+</script>
+</body>
+</html>

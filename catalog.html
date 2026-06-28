@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Каталог — Sea Chips</title>
+  <link rel="stylesheet" href="css/sea-chips.css" />
+
+  <!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Инициализация клиента -->
+<script>
+  const supabaseUrl = 'https://yaukapdyrbefzrifqifa.supabase.co'
+  const supabaseKey = 'sb_publishable_KbCQKRekMG883j7KYPz9EQ_Wei3_HeH'
+  window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+</script>
+
+  <style>
+    .catalog-header { padding: 32px 0 24px; }
+    .catalog-header h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 5vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .catalog-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .catalog-meta span { color: var(--muted); font-size: 0.9375rem; }
+    .sort-select {
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      font-size: 0.875rem;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--muted);
+    }
+    .product-card__image {
+      position: relative;
+    }
+    .product-badges {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    .badge {
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .badge-hit { background: #ff6b35; color: white; }
+    .badge-vegan { background: #2e7d32; color: white; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="home.html" class="logo">
+      <span class="logo-mark">🌊</span>
+      Sea Chips
+    </a>
+    <nav class="nav-desktop">
+      <a href="home.html">Главная</a>
+      <a href="catalog.html" class="active">Каталог</a>
+      <a href="product.html?id=beet-basil">Продукт</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart.html" class="icon-btn" aria-label="Корзина">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 9H7.5L6 6z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M6 6L5 3H2"/></svg>
+        <span class="cart-badge">0</span>
+      </a>
+      <button class="icon-btn menu-toggle" aria-label="Меню">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" aria-label="Мобильное меню">
+  <button class="icon-btn mobile-nav-close" aria-label="Закрыть">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <a href="home.html">Главная</a>
+  <a href="catalog.html">Каталог</a>
+  <a href="product.html?id=beet-basil">Продукт</a>
+  <a href="cart.html">Корзина</a>
+</nav>
+
+<main class="container">
+  <div class="catalog-header">
+    <h1>Каталог чипсов</h1>
+    <p style="color:var(--muted);">Снеки из морских водорослей и овощей — выберите свой вкус</p>
+  </div>
+
+  <div class="mobile-filter-toggle">
+    <button class="btn btn-secondary btn-block" data-filter-open>
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      Фильтры
+    </button>
+  </div>
+
+  <div class="catalog-layout">
+    <aside class="filter-panel" aria-label="Фильтры">
+      <div class="filter-group">
+        <h4>Вкус</h4>
+        <div class="filter-chips">
+          <button class="filter-chip" data-filter="flavor" data-value="Базилик">Базилик</button>
+          <button class="filter-chip" data-filter="flavor" data-value="Лук">Лук</button>
+          <button class="filter-chip" data-filter="flavor" data-value="Морковь">Морковь</button>
+          <button class="filter-chip" data-filter="flavor" data-value="Паприка">Паприка</button>
+          <button class="filter-chip" data-filter="flavor" data-value="Перец">Перец</button>
+          <button class="filter-chip" data-filter="flavor" data-value="Томат">Томат</button>
+          <button class="filter-chip" data-filter="flavor" data-value="Чеснок">Чеснок</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <h4>Формат</h4>
+        <div class="filter-chips">
+          <button class="filter-chip" data-filter="format" data-value="single">90 г</button>
+          <button class="filter-chip" data-filter="format" data-value="multi">Мультипак</button>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm btn-block" id="clear-filters" style="margin-top:8px;">Сбросить фильтры</button>
+    </aside>
+
+    <div>
+      <div class="catalog-meta">
+        <span id="catalog-count">0 товаров</span>
+        <select class="sort-select" id="sort-select" aria-label="Сортировка">
+          <option value="default">По популярности</option>
+          <option value="price-asc">Сначала дешевле</option>
+          <option value="price-desc">Сначала дороже</option>
+          <option value="name">По названию</option>
+        </select>
+      </div>
+      <div class="grid-3" id="catalog-grid"></div>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <p>Нет товаров по выбранным фильтрам</p>
+        <button class="btn btn-secondary btn-sm" id="clear-filters-2" style="margin-top:16px;">Сбросить фильтры</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="filter-drawer" role="dialog" aria-label="Фильтры">
+  <div class="filter-drawer-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+      <h2 style="font-family:var(--font-display);font-size:1.25rem;">Фильтры</h2>
+      <button class="icon-btn" data-filter-close aria-label="Закрыть">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="filter-group">
+      <h4>Вкус</h4>
+      <div class="filter-chips">
+        <button class="filter-chip" data-filter="flavor" data-value="Базилик">Базилик</button>
+        <button class="filter-chip" data-filter="flavor" data-value="Лук">Лук</button>
+        <button class="filter-chip" data-filter="flavor" data-value="Морковь">Морковь</button>
+        <button class="filter-chip" data-filter="flavor" data-value="Паприка">Паприка</button>
+        <button class="filter-chip" data-filter="flavor" data-value="Перец">Перец</button>
+        <button class="filter-chip" data-filter="flavor" data-value="Томат">Томат</button>
+        <button class="filter-chip" data-filter="flavor" data-value="Чеснок">Чеснок</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <h4>Формат</h4>
+      <div class="filter-chips">
+        <button class="filter-chip" data-filter="format" data-value="single">90 г</button>
+        <button class="filter-chip" data-filter="format" data-value="multi">Мультипак</button>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" data-filter-apply style="margin-top:16px;">Показать товары</button>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none;padding:0;">© 2026 Sea Chips</div>
+  </div>
+</footer>
+
+<!-- Подключаем sea-chips.js -->
+<script src="js/sea-chips.js"></script>
+
+<script>
+  // Ждём полной загрузки DOM и товаров
+  document.addEventListener('DOMContentLoaded', async function() {
+    console.log('DOM загружен');
+    
+    // Ждём загрузки товаров из Supabase
+    const products = await SeaChips.loadProducts();
+    console.log('Товаров загружено:', products.length);
+    
+    const grid = document.getElementById('catalog-grid');
+    const countSpan = document.getElementById('catalog-count');
+    const emptyState = document.getElementById('empty-state');
+    
+    console.log('Контейнер найден:', grid);
+    
+    if (!grid) {
+      console.error('Контейнер catalog-grid не найден!');
+      return;
+    }
+    
+    function renderGrid(list) {
+      if (!list.length) {
+        emptyState.style.display = 'block';
+        grid.innerHTML = '';
+        countSpan.textContent = '0 товаров';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      countSpan.textContent = list.length + ' ' + getProductWord(list.length);
+      grid.innerHTML = '';
+      list.forEach(p => {
+        grid.insertAdjacentHTML('beforeend', SeaChips.renderProductCard(p));
+      });
+      SeaChips.bindAddToCartButtons(grid);
+    }
+    
+    function getProductWord(n) {
+      if (n % 10 === 1 && n % 100 !== 11) return 'товар';
+      if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'товара';
+      return 'товаров';
+    }
+    
+    let currentProducts = [...products];
+    renderGrid(currentProducts);
+    
+    // Сортировка
+    document.getElementById('sort-select').addEventListener('change', e => {
+      const sorted = [...currentProducts];
+      switch(e.target.value) {
+        case 'price-asc': sorted.sort((a,b) => a.price - b.price); break;
+        case 'price-desc': sorted.sort((a,b) => b.price - a.price); break;
+        case 'name': sorted.sort((a,b) => a.name.localeCompare(b.name)); break;
+      }
+      renderGrid(sorted);
+    });
+    
+    // Фильтры
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        const filter = this.dataset.filter;
+        document.querySelectorAll(`.filter-chip[data-filter="${filter}"]`).forEach(c => {
+          if (c !== this) c.classList.remove('active');
+        });
+        this.classList.toggle('active');
+        
+        const activeFlavor = document.querySelector('.filter-chip[data-filter="flavor"].active')?.dataset.value;
+        const activeFormat = document.querySelector('.filter-chip[data-filter="format"].active')?.dataset.value;
+        
+        const filtered = products.filter(p => {
+          if (activeFlavor && p.flavor !== activeFlavor) return false;
+          if (activeFormat && p.format !== activeFormat) return false;
+          return true;
+        });
+        currentProducts = filtered;
+        renderGrid(currentProducts);
+      });
+    });
+    
+    function clearAllFilters() {
+      document.querySelectorAll('.filter-chip.active').forEach(c => c.classList.remove('active'));
+      currentProducts = [...products];
+      renderGrid(currentProducts);
+    }
+    
+    document.getElementById('clear-filters')?.addEventListener('click', clearAllFilters);
+    document.getElementById('clear-filters-2')?.addEventListener('click', clearAllFilters);
+    
+    // ========== ОБНОВЛЕНИЕ БЕЙДЖА КОРЗИНЫ (ДОБАВЛЕНО) ==========
+    function updateBadge() {
+      var badge = document.querySelector('.cart-badge');
+      if (badge) {
+        var count = SeaChips.getCartCount() || 0;
+        badge.textContent = count;
+      }
+    }
+    updateBadge();
+    window.addEventListener('cart:updated', updateBadge);
+  });
+</script>
+</body>
+</html>

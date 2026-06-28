@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Корзина — Sea Chips</title>
+  <link rel="stylesheet" href="css/sea-chips.css" />
+  <link rel="stylesheet" href="css/sea-chips-v2.css" />
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Инициализация клиента -->
+  <script>
+    const supabaseUrl = 'https://yaukapdyrbefzrifqifa.supabase.co'
+    const supabaseKey = 'sb_publishable_KbCQKRekMG883j7KYPz9EQ_Wei3_HeH'
+    window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+  </script>
+  
+  <style>
+    .cart-v2-page { padding: 32px 0 48px; }
+    .cart-v2-page h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .cart-v2-layout {
+      display: grid;
+      gap: 32px;
+      margin-top: 24px;
+    }
+    .cart-v2-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: start;
+    }
+    .cart-v2-item__photo .product-photo {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      min-height: auto;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .cart-v2-item__name {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+    .cart-v2-item__name a { color: var(--foreground); text-decoration: none; }
+    .cart-v2-item__name a:hover { color: var(--sea); }
+    .cart-v2-item__meta {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .cart-v2-item__top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .cart-v2-item__bottom {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .cart-v2-item__unit-price {
+      font-size: 0.875rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .cart-v2-item__line-total {
+      font-weight: 700;
+      font-size: 1.0625rem;
+      min-width: 80px;
+    }
+    .cart-v2-item__remove {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      text-decoration: underline;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+    .cart-v2-item__remove:hover { color: #dc2626; }
+    
+    .promo-block {
+      margin-top: 24px;
+      padding: 20px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .promo-block__label {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 10px;
+    }
+    .promo-block__row {
+      display: flex;
+      gap: 12px;
+    }
+    .promo-block__row input { flex: 1; }
+    .promo-block__status {
+      display: none;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      margin-top: 10px;
+      font-size: 0.875rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .promo-block__status.is-visible { display: flex; }
+    .promo-block__status--success {
+      background: var(--sea-light);
+      color: var(--sea-dark);
+    }
+    .promo-block__status--error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .promo-block__remove {
+      background: none;
+      border: none;
+      color: var(--muted);
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 0.8125rem;
+    }
+    
+    .section-block {
+      margin-top: 24px;
+      padding: 20px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .section-block__title {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.0625rem;
+      margin-bottom: 4px;
+    }
+    .section-block__hint {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    
+    .delivery-options-v2 {
+      display: grid;
+      gap: 12px;
+    }
+    .delivery-option-v2 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .delivery-option-v2:has(input:checked) {
+      border-color: var(--sea);
+      background: var(--sea-light);
+    }
+    .delivery-option-v2 input { 
+      accent-color: var(--sea); 
+      width: 18px; 
+      height: 18px; 
+      flex-shrink: 0;
+    }
+    .delivery-option-v2__info { flex: 1; }
+    .delivery-option-v2__info strong { display: block; font-size: 0.9375rem; }
+    .delivery-option-v2__info span { font-size: 0.8125rem; color: var(--muted); }
+    .delivery-option-v2__price { 
+      font-weight: 700; 
+      font-size: 0.9375rem;
+      white-space: nowrap;
+    }
+    .delivery-option-v2__price.is-free { color: var(--success); }
+    
+    .empty-cart {
+      text-align: center;
+      padding: 64px 24px;
+    }
+    .empty-cart h2 {
+      font-family: var(--font-display);
+      margin-bottom: 12px;
+    }
+    
+    .summary-sticky-wrap {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+    }
+    .summary-sticky {
+      background: var(--surface);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+    .summary-sticky__title {
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      margin-bottom: 16px;
+    }
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 0.9375rem;
+    }
+    .summary-line--total {
+      font-weight: 700;
+      font-size: 1.125rem;
+      border-top: 2px solid var(--border);
+      padding-top: 16px;
+      margin-top: 8px;
+    }
+    .summary-savings-badge {
+      background: var(--sea-light);
+      color: var(--sea-dark);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      text-align: center;
+      margin-top: 12px;
+      display: none;
+    }
+    .summary-savings-badge:not(:empty) { display: block; }
+    
+    .cart-badge {
+      background: var(--sea);
+      color: white;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: -6px;
+      right: -8px;
+    }
+    .icon-btn { position: relative; }
+    
+    .qty-stepper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+    }
+    .qty-stepper button {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: var(--surface);
+      font-size: 1.125rem;
+      cursor: pointer;
+      border-radius: 4px;
+      color: var(--foreground);
+    }
+    .qty-stepper button:hover { background: var(--border); }
+    .qty-stepper span {
+      min-width: 24px;
+      text-align: center;
+      font-weight: 600;
+    }
+    
+    .mobile-checkout-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      gap: 16px;
+    }
+    .mobile-checkout-bar__info {
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-checkout-bar__label {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .mobile-checkout-bar__total {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    .mobile-checkout-bar .btn { 
+      padding: 12px 24px;
+      flex-shrink: 0;
+    }
+    
+    .free-delivery-bar {
+      background: var(--sea-light);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 0.875rem;
+      color: var(--sea-dark);
+    }
+    .free-delivery-bar .progress {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .free-delivery-bar .progress .fill {
+      height: 100%;
+      background: var(--sea);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    
+    .btn-block { width: 100%; }
+    
+    @media (min-width: 900px) {
+      .cart-v2-layout { grid-template-columns: 1fr 360px; align-items: start; }
+      .mobile-checkout-bar { display: none !important; }
+    }
+    @media (max-width: 899px) {
+      .summary-sticky-wrap { display: none; }
+    }
+  </style>
+</head>
+<body class="page-with-mobile-bar">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="home.html" class="logo">
+      <span class="logo-mark">🌊</span>
+      Sea Chips
+    </a>
+    <nav class="nav-desktop">
+      <a href="home.html">Главная</a>
+      <a href="catalog.html">Каталог</a>
+      <a href="product.html?id=beet-basil">Продукт</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart-v2.html" class="icon-btn" aria-label="Корзина">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 9H7.5L6 6z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M6 6L5 3H2"/></svg>
+        <span class="cart-badge">0</span>
+      </a>
+      <button class="icon-btn menu-toggle" aria-label="Меню">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" aria-label="Мобильное меню">
+  <button class="icon-btn mobile-nav-close" aria-label="Закрыть">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <a href="home.html">Главная</a>
+  <a href="catalog.html">Каталог</a>
+  <a href="cart-v2.html">Корзина</a>
+</nav>
+
+<main class="container cart-v2-page">
+  <h1>Корзина</h1>
+
+  <div id="cart-empty" class="empty-cart" style="display:none;">
+    <h2>Корзина пуста</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">Добавьте чипсы из морской капусты — хруст ждёт</p>
+    <a href="catalog.html" class="btn btn-primary">Перейти в каталог</a>
+  </div>
+
+  <div class="cart-v2-layout" id="cart-content" style="display:none;">
+    <div>
+      <!-- Прогресс бесплатной доставки -->
+      <div id="free-delivery-bar"></div>
+
+      <!-- Список товаров -->
+      <div id="cart-items"></div>
+
+      <!-- Промокод -->
+      <div class="promo-block">
+        <div class="promo-block__label">Промокод</div>
+        <div class="promo-block__row" id="promo-form-row">
+          <input type="text" class="form-input" id="promo-input" placeholder="SEACHIPS10" aria-label="Промокод" autocomplete="off" />
+          <button type="button" class="btn btn-secondary" id="promo-apply">Применить</button>
+        </div>
+        <div class="promo-block__status promo-block__status--success" id="promo-status-success">
+          <span>✓ Скидка 10% применена</span>
+          <button type="button" class="promo-block__remove" id="promo-remove">Удалить</button>
+        </div>
+        <div class="promo-block__status promo-block__status--error" id="promo-status-error"></div>
+      </div>
+
+      <!-- Доставка -->
+      <div class="section-block">
+        <h3 class="section-block__title">Способ доставки</h3>
+        <p class="section-block__hint">Бесплатно от 1 500 ₽ — курьер и пункт выдачи</p>
+        <div class="delivery-options-v2" id="delivery-options"></div>
+      </div>
+    </div>
+
+    <!-- Итого (десктоп) -->
+    <aside class="summary-sticky-wrap">
+      <div class="summary-sticky">
+        <h3 class="summary-sticky__title">Итого</h3>
+        <div id="summary-rows"></div>
+        <div class="summary-savings-badge" id="savings-badge"></div>
+        <a href="checkout-v2.html" class="btn btn-primary btn-block" id="checkout-btn" style="margin-top:20px;">Оформить заказ</a>
+        <a href="catalog.html" style="display:block;text-align:center;margin-top:14px;font-size:0.875rem;color:var(--muted);">← Продолжить покупки</a>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- Мобильная нижняя панель -->
+<div class="mobile-checkout-bar" id="mobile-bar" style="display:none;">
+  <div class="mobile-checkout-bar__info">
+    <span class="mobile-checkout-bar__label">К оплате</span>
+    <span class="mobile-checkout-bar__total" id="mobile-total">0 ₽</span>
+  </div>
+  <a href="checkout-v2.html" class="btn btn-primary" id="mobile-checkout-btn">Оформить</a>
+</div>
+
+<script src="js/sea-chips.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Загружаем товары из Supabase
+    await SeaChips.loadProducts();
+    
+    // ========== СОСТОЯНИЕ ==========
+    var promoApplied = false;
+    var currentDelivery = 'courier';
+    var freeDeliveryFrom = 1500;
+    var deliveryPrices = { courier: 299, pickup: 149, express: 499 };
+    
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+    function getDeliveryPrice() {
+      var subtotal = SeaChips.getCartTotal() || 0;
+      if (subtotal >= freeDeliveryFrom && currentDelivery !== 'express') return 0;
+      return deliveryPrices[currentDelivery] || 0;
+    }
+    
+    function updateBadge() {
+      var badge = document.querySelector('.cart-badge');
+      if (badge) {
+        var count = SeaChips.getCartCount() || 0;
+        badge.textContent = count;
+      }
+    }
+    
+    // ========== РЕНДЕР ТОВАРОВ ==========
+    function renderCartItems() {
+      var cart = SeaChips.getCart();
+      var container = document.getElementById('cart-items');
+      var empty = document.getElementById('cart-empty');
+      var content = document.getElementById('cart-content');
+      var mobileBar = document.getElementById('mobile-bar');
+      
+      if (!cart || !cart.length) {
+        empty.style.display = 'block';
+        content.style.display = 'none';
+        mobileBar.style.display = 'none';
+        updateBadge();
+        return;
+      }
+      
+      empty.style.display = 'none';
+      content.style.display = 'grid';
+      mobileBar.style.display = 'flex';
+      container.innerHTML = '';
+      
+      cart.forEach(function(item) {
+        var p = SeaChips.getProductById(item.id);
+        if (!p) {
+          console.warn('Товар не найден:', item.id);
+          return;
+        }
+        
+        var lineTotal = (p.price || 0) * (item.qty || 1);
+        
+        container.insertAdjacentHTML('beforeend',
+  '<article class="cart-v2-item" data-id="' + item.id + '">' +
+    '<div class="cart-v2-item__photo">' +
+      '<a href="product.html?id=' + p.id + '">' +
+        '<img src="' + (p.image || '/images/placeholder.jpg') + '" ' +
+             'alt="' + (p.name || 'Товар') + '" ' +
+             'style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);aspect-ratio:1;" ' +
+             'onerror="this.style.display=\'none\';this.parentElement.innerHTML+=\'<div style=\\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--surface);border-radius:var(--radius-sm);font-size:0.7rem;color:var(--muted);\\\'>' + (p.name || 'Товар') + '</div>\'" />' +
+      '</a>' +
+    '</div>' +
+            '<div class="cart-v2-item__body">' +
+              '<div class="cart-v2-item__top">' +
+                '<div>' +
+                  '<h3 class="cart-v2-item__name"><a href="product.html?id=' + p.id + '">' + (p.name || 'Товар') + '</a></h3>' +
+                  '<p class="cart-v2-item__meta">' + (p.weight || '90 г') + '</p>' +
+                '</div>' +
+                '<span class="cart-v2-item__unit-price">' + SeaChips.formatPrice(p.price || 0) + ' / шт.</span>' +
+              '</div>' +
+              '<div class="cart-v2-item__bottom">' +
+                '<div class="qty-stepper">' +
+                  '<button type="button" aria-label="Уменьшить" data-qty-minus="' + item.id + '">−</button>' +
+                  '<span>' + (item.qty || 1) + '</span>' +
+                  '<button type="button" aria-label="Увеличить" data-qty-plus="' + item.id + '">+</button>' +
+                '</div>' +
+                '<span class="cart-v2-item__line-total">' + SeaChips.formatPrice(lineTotal) + '</span>' +
+                '<button type="button" class="cart-v2-item__remove" data-remove="' + item.id + '">Удалить</button>' +
+              '</div>' +
+            '</div>' +
+          '</article>'
+        );
+      });
+      
+      bindEvents();
+      updateSummary();
+      updateBadge();
+    }
+    
+    // ========== ОБНОВЛЕНИЕ ИТОГО ==========
+    function updateSummary() {
+      var subtotal = SeaChips.getCartTotal() || 0;
+      var count = SeaChips.getCartCount() || 0;
+      var discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
+      var delivery = getDeliveryPrice();
+      var total = subtotal - discount + delivery;
+      
+      // Итого
+      var summaryEl = document.getElementById('summary-rows');
+      if (summaryEl) {
+        summaryEl.innerHTML = 
+          '<div class="summary-line"><span>Товары (' + count + ')</span><span>' + SeaChips.formatPrice(subtotal) + '</span></div>' +
+          (discount ? '<div class="summary-line"><span>Скидка</span><span style="color:#16a34a;">−' + SeaChips.formatPrice(discount) + '</span></div>' : '') +
+          '<div class="summary-line"><span>Доставка</span><span>' + (delivery ? SeaChips.formatPrice(delivery) : 'Бесплатно') + '</span></div>' +
+          '<div class="summary-line summary-line--total"><span>К оплате</span><span>' + SeaChips.formatPrice(total) + '</span></div>';
+      }
+      
+      // Мобильная панель
+      var mobileTotal = document.getElementById('mobile-total');
+      if (mobileTotal) {
+        mobileTotal.textContent = SeaChips.formatPrice(total);
+      }
+      
+      // Экономия
+      var savingsEl = document.getElementById('savings-badge');
+      if (savingsEl) {
+        if (discount) {
+          savingsEl.textContent = 'Вы экономите ' + SeaChips.formatPrice(discount);
+          savingsEl.style.display = 'block';
+        } else {
+          savingsEl.style.display = 'none';
+        }
+      }
+      
+      // Прогресс доставки
+      renderFreeDeliveryBar(subtotal);
+    }
+    
+    // ========== ПРОГРЕСС ДОСТАВКИ ==========
+    function renderFreeDeliveryBar(subtotal) {
+      var container = document.getElementById('free-delivery-bar');
+      if (!container) return;
+      
+      if (subtotal >= freeDeliveryFrom) {
+        container.innerHTML = '<div class="free-delivery-bar">🎉 Бесплатная доставка!</div>';
+        return;
+      }
+      
+      var percent = Math.min((subtotal / freeDeliveryFrom) * 100, 100);
+      var remaining = SeaChips.formatPrice(freeDeliveryFrom - subtotal);
+      
+      container.innerHTML = 
+        '<div class="free-delivery-bar">' +
+          'Добавьте товаров на ' + remaining + ' для бесплатной доставки' +
+          '<div class="progress"><div class="fill" style="width:' + percent + '%;"></div></div>' +
+        '</div>';
+    }
+    
+    // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
+    function bindEvents() {
+      // Минус
+      document.querySelectorAll('[data-qty-minus]').forEach(function(btn) {
+        btn.onclick = function() {
+          var id = this.getAttribute('data-qty-minus');
+          var item = SeaChips.getCart().find(function(i) { return i.id === id; });
+          if (item && item.qty > 1) {
+            SeaChips.updateQty(id, item.qty - 1);
+            renderCartItems();
+          } else if (item && item.qty === 1) {
+            SeaChips.removeFromCart(id);
+            renderCartItems();
+            SeaChips.showToast('Товар удалён');
+          }
+        };
+      });
+      
+      // Плюс
+      document.querySelectorAll('[data-qty-plus]').forEach(function(btn) {
+        btn.onclick = function() {
+          var id = this.getAttribute('data-qty-plus');
+          var item = SeaChips.getCart().find(function(i) { return i.id === id; });
+          if (item) {
+            SeaChips.updateQty(id, item.qty + 1);
+            renderCartItems();
+          }
+        };
+      });
+      
+      // Удалить
+      document.querySelectorAll('[data-remove]').forEach(function(btn) {
+        btn.onclick = function() {
+          var id = this.getAttribute('data-remove');
+          SeaChips.removeFromCart(id);
+          renderCartItems();
+          SeaChips.showToast('Товар удалён');
+        };
+      });
+    }
+    
+    // ========== ДОСТАВКА ==========
+    function renderDeliveryOptions() {
+      var container = document.getElementById('delivery-options');
+      if (!container) return;
+      
+      var subtotal = SeaChips.getCartTotal() || 0;
+      var options = [
+        { key: 'courier', label: 'Курьером', eta: 'Завтра, 10:00–22:00', price: 299 },
+        { key: 'pickup', label: 'Пункт выдачи', eta: '1–2 дня', price: 149 },
+        { key: 'express', label: 'Экспресс', eta: 'Сегодня, 2–4 часа', price: 499 }
+      ];
+      
+      var html = '';
+      options.forEach(function(opt) {
+        var isFree = subtotal >= freeDeliveryFrom && opt.key !== 'express';
+        var priceText = isFree ? 'Бесплатно' : SeaChips.formatPrice(opt.price);
+        var priceClass = isFree ? ' delivery-option-v2__price is-free' : ' delivery-option-v2__price';
+        
+        html +=
+          '<label class="delivery-option-v2">' +
+            '<input type="radio" name="delivery" value="' + opt.key + '"' + (currentDelivery === opt.key ? ' checked' : '') + ' />' +
+            '<div class="delivery-option-v2__info">' +
+              '<strong>' + opt.label + '</strong>' +
+              '<span>' + opt.eta + '</span>' +
+            '</div>' +
+            '<span class="' + priceClass.trim() + '">' + priceText + '</span>' +
+          '</label>';
+      });
+      
+      container.innerHTML = html;
+      
+      container.querySelectorAll('input[name="delivery"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+          currentDelivery = this.value;
+          updateSummary();
+        });
+      });
+    }
+    
+    // ========== ПРОМОКОД ==========
+    function initPromo() {
+      var input = document.getElementById('promo-input');
+      var apply = document.getElementById('promo-apply');
+      var remove = document.getElementById('promo-remove');
+      var success = document.getElementById('promo-status-success');
+      var error = document.getElementById('promo-status-error');
+      var row = document.getElementById('promo-form-row');
+      
+      apply.addEventListener('click', function() {
+        var code = (input.value || '').trim().toUpperCase();
+        if (code === 'SEACHIPS10') {
+          promoApplied = true;
+          success.classList.add('is-visible');
+          row.style.display = 'none';
+          error.classList.remove('is-visible');
+          SeaChips.showToast('Скидка 10% применена');
+          updateSummary();
+        } else {
+          error.textContent = '✕ Неверный промокод';
+          error.classList.add('is-visible');
+          setTimeout(function() {
+            error.classList.remove('is-visible');
+          }, 3000);
+        }
+      });
+      
+      remove.addEventListener('click', function() {
+        promoApplied = false;
+        success.classList.remove('is-visible');
+        row.style.display = 'flex';
+        input.value = '';
+        updateSummary();
+        SeaChips.showToast('Промокод удалён');
+      });
+      
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          apply.click();
+        }
+      });
+    }
+    
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    renderDeliveryOptions();
+    renderCartItems();
+    initPromo();
+    
+    window.addEventListener('cart:updated', function() {
+      renderCartItems();
+      renderDeliveryOptions();
+    });
+  });
+</script>
+</body>
+</html>

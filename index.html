@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sea Chips — Прототип интернет-магазина</title>
+  <link rel="stylesheet" href="css/sea-chips.css" />
+  <style>
+    .launcher {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    .launcher-hero {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 48px 0;
+    }
+    .launcher-grid {
+      display: grid;
+      gap: 48px;
+      align-items: center;
+    }
+    .launcher-intro h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .launcher-intro h1 em {
+      font-style: normal;
+      color: var(--sea);
+    }
+    .launcher-intro p {
+      font-size: 1.125rem;
+      color: var(--muted);
+      max-width: 48ch;
+      margin-bottom: 28px;
+    }
+    .launcher-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .launcher-meta span {
+      padding: 6px 14px;
+      background: var(--sea-light);
+      color: var(--sea-dark);
+      border-radius: 999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+    }
+    .screen-cards {
+      display: grid;
+      gap: 16px;
+    }
+    .screen-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 20px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      transition: all 0.3s var(--ease);
+    }
+    .screen-card:hover {
+      border-color: var(--sea);
+      transform: translateX(4px);
+      box-shadow: var(--shadow);
+    }
+    .screen-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--sea-light);
+      color: var(--sea-dark);
+      font-family: var(--font-display);
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+    .screen-card h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.0625rem;
+      margin-bottom: 4px;
+    }
+    .screen-card p {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .screen-arrow {
+      color: var(--sea);
+      font-size: 1.25rem;
+    }
+    .launcher-visual .product-photo {
+      aspect-ratio: 4/3;
+      min-height: 240px;
+    }
+    @media (min-width: 900px) {
+      .launcher-grid { grid-template-columns: 1fr 1fr; }
+      .screen-cards { grid-template-columns: 1fr; }
+    }
+    @media (min-width: 1100px) {
+      .launcher-grid { grid-template-columns: 1.1fr 0.9fr; }
+    }
+  </style>
+</head>
+
+<body class="launcher">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">🌊</span>
+      Sea Chips
+    </a>
+    <div class="header-actions">
+      <a href="home.html" class="btn btn-primary btn-sm">Открыть магазин</a>
+    </div>
+  </div>
+</header>
+
+<main class="launcher-hero">
+  <div class="container launcher-grid">
+    <div class="launcher-intro">
+      <div class="launcher-meta">
+        <span>6 экранов</span>
+        <span>Mobile-first</span>
+        <span>D2C-ready</span>
+      </div>
+      <h1>Sea Chips — <em>прототип</em> интернет-магазина</h1>
+      <p>Премиальный D2C-бренд чипсов из морской капусты. Адаптивный веб с рабочей корзиной, фильтрами каталога и оформлением заказа.</p>
+      <a href="home.html" class="btn btn-primary">Начать с главной →</a>
+
+      <div class="screen-cards" style="margin-top:40px;">
+        <a href="home.html" class="screen-card">
+          <span class="screen-num">01</span>
+          <div>
+            <h3>Главная</h3>
+            <p>Hero, преимущества, процесс, отзывы, подписка</p>
+          </div>
+          <span class="screen-arrow">→</span>
+        </a>
+        <a href="catalog.html" class="screen-card">
+          <span class="screen-num">02</span>
+          <div>
+            <h3>Каталог</h3>
+            <p>Фильтры по вкусу, формату и свойствам · сортировка</p>
+          </div>
+          <span class="screen-arrow">→</span>
+        </a>
+        <a href="product.html?id=beet-basil" class="screen-card">
+          <span class="screen-num">03</span>
+          <div>
+            <h3>Карточка товара</h3>
+            <p>Галерея, варианты упаковки, состав, пищевая ценность</p>
+          </div>
+          <span class="screen-arrow">→</span>
+        </a>
+        <a href="cart-v2.html" class="screen-card">
+          <span class="screen-num">04</span>
+          <div>
+            <h3>Корзина v2</h3>
+            <p>Крупные карточки, прогресс доставки, промокод, sticky итого</p>
+          </div>
+          <span class="screen-arrow">→</span>
+        </a>
+        <a href="checkout-v2.html" class="screen-card">
+          <span class="screen-num">05</span>
+          <div>
+            <h3>Оформление v2</h3>
+            <p>3 шага: контакты → доставка → оплата · Shopify UX</p>
+          </div>
+          <span class="screen-arrow">→</span>
+        </a>
+        <a href="order-success.html" class="screen-card">
+          <span class="screen-num">06</span>
+          <div>
+            <h3>Заказ оформлен</h3>
+            <p>Подтверждение, номер заказа, статус оплаты, состав</p>
+          </div>
+          <span class="screen-arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="launcher-visual">
+      <div class="product-photo">
+        <span class="product-photo-label">Sea Chips · свекла + базилик · суперфуд</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+        <div style="padding:16px;background:var(--sea-light);border-radius:var(--radius);text-align:center;">
+          <strong style="font-family:var(--font-display);color:var(--sea-dark);">Морской зелёный</strong>
+          <p style="font-size:0.75rem;color:var(--muted);margin-top:4px;">Primary CTA</p>
+        </div>
+        <div style="padding:16px;background:var(--beet-light);border-radius:var(--radius);text-align:center;">
+          <strong style="font-family:var(--font-display);color:var(--beet);">Свекольный</strong>
+          <p style="font-size:0.75rem;color:var(--muted);margin-top:4px;">Accent · badges</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/sea-chips.js"></script>
+</body>
+</html>

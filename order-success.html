@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Заказ оформлен — Sea Chips</title>
+  <link rel="stylesheet" href="css/sea-chips.css" />
+  <link rel="stylesheet" href="css/sea-chips-v2.css" />
+  <link rel="stylesheet" href="css/sea-chips-store.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="home.html" class="logo">
+      <span class="logo-mark">🌊</span>
+      Sea Chips
+    </a>
+    <nav class="nav-desktop">
+      <a href="home.html">Главная</a>
+      <a href="catalog.html">Каталог</a>
+      <a href="cart-v2.html">Корзина</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart-v2.html" class="icon-btn" aria-label="Корзина">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 9H7.5L6 6z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M6 6L5 3H2"/></svg>
+        <span class="cart-badge">0</span>
+      </a>
+      <button class="icon-btn menu-toggle" aria-label="Меню">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" aria-label="Мобильное меню">
+  <button class="icon-btn mobile-nav-close" aria-label="Закрыть">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <a href="home.html">Главная</a>
+  <a href="catalog.html">Каталог</a>
+  <a href="cart-v2.html">Корзина</a>
+</nav>
+
+<main class="container success-page">
+  <div id="success-content" style="display:none;">
+    <div class="success-hero">
+      <div class="success-hero__icon">✓</div>
+      <h1 id="success-title">Спасибо за заказ!</h1>
+      <p id="success-subtitle">Подтверждение отправлено на email</p>
+      <div class="success-order-id">
+        <span>Заказ</span>
+        <strong id="order-id-display">—</strong>
+      </div>
+    </div>
+
+    <div class="success-layout">
+      <div>
+        <div class="success-card" style="margin-bottom:20px;">
+          <div class="payment-status payment-status--paid" id="payment-status">
+            <span>✓</span> Оплата прошла успешно
+          </div>
+          <h2>Ваш заказ</h2>
+          <div class="success-items" id="order-items"></div>
+        </div>
+
+        <div class="success-card">
+          <h2>Доставка</h2>
+          <div class="success-delivery-info" id="delivery-info"></div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="success-card success-summary">
+          <h2>Итого</h2>
+          <div id="order-summary"></div>
+        </div>
+
+        <div class="success-card" style="margin-top:16px;">
+          <h2>Оплата</h2>
+          <p style="font-size:0.875rem;color:var(--muted);line-height:1.5;" id="payment-info"></p>
+        </div>
+      </aside>
+    </div>
+
+    <div class="success-actions">
+      <a href="catalog.html" class="btn btn-primary">Продолжить покупки</a>
+      <a href="home.html" class="btn btn-secondary">На главную</a>
+    </div>
+
+    <div class="success-trust">
+      <span>🔒 Безопасная оплата</span>
+      <span>🛡️ Защищённое соединение</span>
+      <span>🚚 Доставка по всей России</span>
+    </div>
+  </div>
+
+  <div id="success-empty" class="success-empty" style="display:none;">
+    <h2 style="font-family:var(--font-display);margin-bottom:12px;">Заказ не найден</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">Перейдите в каталог и оформите новый заказ</p>
+    <a href="catalog.html" class="btn btn-primary">В каталог</a>
+  </div>
+</main>
+
+<script src="js/sea-chips.js"></script>
+<script src="js/sea-chips-cart.js"></script>
+<script src="js/sea-chips-payment.js"></script>
+<script src="js/sea-chips-store.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var orderId = SeaChips.getQueryParam('id');
+    var order = orderId ? SeaChipsStore.getOrderById(orderId) : SeaChipsStore.getLastOrder();
+
+    var content = document.getElementById('success-content');
+    var empty = document.getElementById('success-empty');
+
+    if (!order) {
+      content.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+
+    content.style.display = 'block';
+    empty.style.display = 'none';
+
+    /* Заголовок */
+    document.getElementById('success-title').textContent =
+      order.customer.name + ', спасибо за заказ!';
+    document.getElementById('success-subtitle').textContent =
+      'Подтверждение отправлено на ' + order.customer.email;
+    document.getElementById('order-id-display').textContent = order.id;
+
+    /* Статус оплаты */
+    var statusEl = document.getElementById('payment-status');
+    if (order.paymentStatus === 'paid') {
+      statusEl.className = 'payment-status payment-status--paid';
+      statusEl.innerHTML = '<span>✓</span> Оплата прошла успешно';
+    } else {
+      statusEl.className = 'payment-status payment-status--pending';
+      statusEl.innerHTML = '<span>⏳</span> Ожидает подтверждения оплаты';
+    }
+
+    /* Товары */
+    var itemsHtml = '';
+    order.items.forEach(function (item) {
+      itemsHtml +=
+        '<div class="success-item">' +
+          '<div class="success-item__photo">' +
+            '<div class="product-photo"><span class="product-photo-label">' + item.name + '</span></div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="success-item__name">' + item.name + '</div>' +
+            '<div class="success-item__qty">' + item.qty + ' × ' + SeaChips.formatPrice(item.price) + '</div>' +
+          '</div>' +
+          '<div class="success-item__price">' + SeaChips.formatPrice(item.lineTotal) + '</div>' +
+        '</div>';
+    });
+    document.getElementById('order-items').innerHTML = itemsHtml;
+
+    /* Доставка */
+    var deliveryHtml =
+      '<strong>' + (order.delivery.label || 'Доставка') + '</strong>' +
+      (order.delivery.address ? order.delivery.address + '<br>' : '') +
+      'Слот: ' + (order.delivery.slot || '—') + '<br>' +
+      'Телефон: ' + order.customer.phone;
+    document.getElementById('delivery-info').innerHTML = deliveryHtml;
+
+    /* Итого */
+    var t = order.totals;
+    document.getElementById('order-summary').innerHTML =
+      '<div class="summary-line"><span>Товары</span><span>' + SeaChips.formatPrice(t.subtotal) + '</span></div>' +
+      (t.discount
+        ? '<div class="summary-line"><span>Скидка</span><span style="color:var(--success);">−' + SeaChips.formatPrice(t.discount) + '</span></div>'
+        : '') +
+      '<div class="summary-line"><span>Доставка</span><span>' + (t.delivery ? SeaChips.formatPrice(t.delivery) : 'Бесплатно') + '</span></div>' +
+      '<div class="summary-line summary-line--total"><span>Итого</span><span>' + SeaChips.formatPrice(t.total) + '</span></div>';
+
+    /* Платёжная информация */
+    var methodLabels = { card: 'Банковская карта', sbp: 'СБП', apple: 'Apple Pay', google: 'Google Pay' };
+    var provider = order.payment.providerName || SeaChipsPayment.getProvider(order.payment.provider).name;
+    document.getElementById('payment-info').textContent =
+      (methodLabels[order.payment.method] || order.payment.method) +
+      ' · ' + provider +
+      (order.payment.paymentId ? ' · ID ' + order.payment.paymentId : '');
+  });
+</script>
+</body>
+</html>

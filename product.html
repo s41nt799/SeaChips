@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Товар — Sea Chips</title>
+  <link rel="stylesheet" href="css/sea-chips.css" />
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Инициализация клиента -->
+  <script>
+    const supabaseUrl = 'https://yaukapdyrbefzrifqifa.supabase.co'
+    const supabaseKey = 'sb_publishable_KbCQKRekMG883j7KYPz9EQ_Wei3_HeH'
+    window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+  </script>
+  
+  <style>
+    .product-page { padding: 24px 0 100px; }
+    .product-layout {
+      display: grid;
+      gap: 32px;
+    }
+    .gallery-main .product-photo {
+      aspect-ratio: 1;
+      min-height: 300px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .gallery-main img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: var(--radius);
+    }
+    .gallery-thumbs {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .gallery-thumb {
+      flex: 1;
+      max-width: 80px;
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      border: 2px solid transparent;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      background: var(--surface);
+    }
+    .gallery-thumb.active { border-color: var(--sea); }
+    .gallery-thumb img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      display: block;
+    }
+    .gallery-thumb .thumb-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.6rem;
+    }
+    .product-info h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .product-info .subtitle { color: var(--muted); margin-bottom: 16px; }
+    .product-price {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--sea-dark);
+      margin-bottom: 20px;
+    }
+    .pack-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .pack-option {
+      padding: 12px 18px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+      cursor: pointer;
+      background: var(--surface);
+    }
+    .pack-option.active {
+      border-color: var(--sea);
+      background: var(--sea-light);
+      color: var(--sea-dark);
+    }
+    .product-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .product-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1.5px solid var(--border);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .product-tab {
+      padding: 12px 18px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1.5px;
+      white-space: nowrap;
+      transition: all 0.2s;
+      cursor: pointer;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
+    .product-tab.active {
+      color: var(--sea-dark);
+      border-bottom-color: var(--sea);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .nutrition-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9375rem;
+    }
+    .nutrition-table th,
+    .nutrition-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .nutrition-table th { font-weight: 600; width: 60%; }
+    .benefit-list {
+      display: grid;
+      gap: 12px;
+    }
+    .benefit-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      background: var(--sea-light);
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+    }
+    .benefit-item strong { color: var(--sea-dark); }
+    .badge-hit, .badge-vegan {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .badge-hit { background: #ff6b35; color: white; }
+    .badge-vegan { background: #2e7d32; color: white; }
+    
+    .sticky-buy-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      display: none;
+      align-items: center;
+      gap: 16px;
+      z-index: 100;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    }
+    .sticky-buy-bar.visible { display: flex; }
+    .sticky-buy-bar .product-price { margin: 0; font-size: 1.25rem; }
+    .sticky-buy-bar .btn { flex: 1; }
+    
+    @media (min-width: 900px) {
+      .product-layout { grid-template-columns: 1fr 1fr; gap: 48px; }
+      .product-page { padding: 48px 0; }
+      .sticky-buy-bar { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="home.html" class="logo">
+      <span class="logo-mark">🌊</span>
+      Sea Chips
+    </a>
+    <nav class="nav-desktop">
+      <a href="home.html">Главная</a>
+      <a href="catalog.html">Каталог</a>
+      <a href="product.html?id=beet-basil" class="active">Продукт</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart.html" class="icon-btn" aria-label="Корзина">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 9H7.5L6 6z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M6 6L5 3H2"/></svg>
+        <span class="cart-badge">0</span>
+      </a>
+      <button class="icon-btn menu-toggle" aria-label="Меню">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" aria-label="Мобильное меню">
+  <button class="icon-btn mobile-nav-close" aria-label="Закрыть">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <a href="home.html">Главная</a>
+  <a href="catalog.html">Каталог</a>
+  <a href="cart.html">Корзина</a>
+</nav>
+
+<main class="container product-page">
+  <div class="product-layout" id="product-content">
+    <!-- Gallery -->
+    <div class="gallery">
+      <div class="gallery-main">
+        <div class="product-photo" id="main-photo">
+          <span class="product-photo-label" id="photo-label">Фото продукта</span>
+        </div>
+      </div>
+      <div class="gallery-thumbs" id="gallery-thumbs">
+        <!-- ТУТ БУДУТ МИНИАТЮРЫ -->
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="product-info">
+      <div id="product-badges"></div>
+      <h1 id="product-name">Загрузка…</h1>
+      <p class="subtitle" id="product-subtitle"></p>
+      <div class="product-price" id="product-price"></div>
+
+      <p style="margin-bottom:20px;line-height:1.6;" id="product-desc"></p>
+
+      <p style="font-weight:600;margin-bottom:10px;font-size:0.875rem;">Формат упаковки</p>
+      <div class="pack-options" id="pack-options">
+        <button class="pack-option active" data-pack="single">90 г</button>
+        <button class="pack-option" data-pack="multi">3 × 90 г</button>
+      </div>
+
+      <div class="product-actions">
+        <div class="qty-stepper" id="qty-stepper">
+          <button type="button" id="qty-minus" aria-label="Меньше">−</button>
+          <span id="qty-value">1</span>
+          <button type="button" id="qty-plus" aria-label="Больше">+</button>
+        </div>
+        <button class="btn btn-primary" id="add-to-cart-btn" style="flex:1;min-width:180px;">Добавить в корзину</button>
+      </div>
+
+      <div class="product-tabs" role="tablist">
+        <button class="product-tab active" data-tab="desc" role="tab">Описание</button>
+        <button class="product-tab" data-tab="composition" role="tab">Состав</button>
+        <button class="product-tab" data-tab="nutrition" role="tab">Пищевая ценность</button>
+        <button class="product-tab" data-tab="benefits" role="tab">Польза</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-desc" role="tabpanel">
+        <p id="tab-desc-text" style="color:var(--muted);line-height:1.65;"></p>
+      </div>
+      <div class="tab-panel" id="tab-composition" role="tabpanel">
+        <p style="line-height:1.65;">Ламинария (морская капуста) 78%, сок свёклы 8%, базилик сушёный 2%, морская соль, оливковое масло extra virgin.</p>
+        <p style="margin-top:12px;color:var(--muted);font-size:0.875rem;">Без глютена, без ГМО, без искусственных красителей и усилителей вкуса.</p>
+      </div>
+      <div class="tab-panel" id="tab-nutrition" role="tabpanel">
+        <table class="nutrition-table">
+          <tr><th>На 100 г продукта</th><th></th></tr>
+          <tr><td>Энергетическая ценность</td><td>320 ккал</td></tr>
+          <tr><td>Белки</td><td>8 г</td></tr>
+          <tr><td>Жиры</td><td>12 г</td></tr>
+          <tr><td>Углеводы</td><td>42 г</td></tr>
+          <tr><td>Клетчатка</td><td>18 г</td></tr>
+          <tr><td>Йод</td><td>890 мкг (593% СУ*)</td></tr>
+          <tr><td>Натрий</td><td>480 мг</td></tr>
+        </table>
+        <p style="margin-top:8px;font-size:0.75rem;color:var(--muted);">*Суточная норма для взрослого</p>
+      </div>
+      <div class="tab-panel" id="tab-benefits" role="tabpanel">
+        <div class="benefit-list">
+          <div class="benefit-item"><span>🧬</span><span><strong>Йод</strong> — поддержка щитовидной железы и обмена веществ</span></div>
+          <div class="benefit-item"><span>🌾</span><span><strong>Клетчатка 18 г</strong> — нормализация пищеварения и длительное насыщение</span></div>
+          <div class="benefit-item"><span>⚖️</span><span><strong>~90 ккал/порция</strong> — в 2,5 раза меньше обычных картофельных чипсов</span></div>
+          <div class="benefit-item"><span>🌱</span><span><strong>100% растительный</strong> — подходит для веганов и постного стола</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Рекомендованные -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">С этим покупают</h2>
+    </div>
+    <div class="grid-3" id="related-products"></div>
+  </section>
+</main>
+
+<div class="sticky-buy-bar" id="sticky-bar">
+  <span class="product-price" id="sticky-price" style="font-size:1.25rem;margin:0;"></span>
+  <button class="btn btn-primary" id="sticky-add" style="flex:1;">В корзину</button>
+</div>
+
+<script src="js/sea-chips.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    console.log('=== PRODUCT PAGE START ===');
+    
+    try {
+      // Загружаем товары
+      console.log('1. Загружаю товары...');
+      await SeaChips.loadProducts();
+      console.log('2. Товаров загружено:', SeaChips.products.length);
+      
+      // Получаем ID товара из URL
+      var urlParams = new URLSearchParams(window.location.search);
+      var productId = urlParams.get('id') || 'beet-basil';
+      console.log('3. ID товара из URL:', productId);
+      
+      // Ищем товар
+      var product = SeaChips.getProductById(productId);
+      console.log('4. Найден товар:', product);
+      
+      if (!product) {
+        console.error('Товар не найден!');
+        document.getElementById('product-content').innerHTML = 
+          '<div style="text-align:center;padding:80px 20px;">' +
+            '<h2 style="font-family:var(--font-display);margin-bottom:12px;">Товар не найден</h2>' +
+            '<p style="color:var(--muted);margin-bottom:24px;">Товара с ID "' + productId + '" нет в каталоге</p>' +
+            '<a href="catalog.html" class="btn btn-primary">Вернуться в каталог</a>' +
+          '</div>';
+        return;
+      }
+      
+      console.log('5. Начинаю рендер товара...');
+      
+      // ========== ЗАПОЛНЯЕМ ДАННЫЕ ==========
+      var qty = 1;
+      var currentPack = 'single';
+      var prices = { single: product.price, multi: Math.round(product.price * 2.5) };
+      
+      // Название и цена
+      document.getElementById('product-name').textContent = product.name;
+      document.getElementById('product-price').textContent = SeaChips.formatPrice(product.price);
+      document.getElementById('sticky-price').textContent = SeaChips.formatPrice(product.price);
+      document.title = product.name + ' — Sea Chips';
+      
+      // Описание
+      var desc = product.description || 'Хрустящие чипсы из морской капусты. Полезный перекус без вреда для фигуры.';
+      document.getElementById('product-desc').textContent = desc;
+      document.getElementById('tab-desc-text').textContent = desc;
+      
+      // Подзаголовок (вес + вкус)
+      var subtitleEl = document.getElementById('product-subtitle');
+      if (subtitleEl) {
+        subtitleEl.textContent = (product.weight || '90 г') + ' · ' + (product.flavor || '');
+      }
+      
+      // Бейджи
+      var badgesContainer = document.getElementById('product-badges');
+      if (badgesContainer && product.tags) {
+        var badges = '';
+        if (product.tags.includes('hit')) badges += '<span class="badge-hit">Хит продаж</span> ';
+        if (product.tags.includes('vegan')) badges += '<span class="badge-vegan">100% vegan</span>';
+        badgesContainer.innerHTML = badges;
+      }
+      
+      // ========== ФОТО И ГАЛЕРЕЯ ==========
+      var mainPhoto = document.getElementById('main-photo');
+      var thumbsContainer = document.getElementById('gallery-thumbs');
+      
+      if (mainPhoto) {
+        var imageUrl = product.image || '/images/placeholder.jpg';
+        mainPhoto.innerHTML = '<img src="' + imageUrl + '" alt="' + product.name + '" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span class=\\\'product-photo-label\\\'>' + product.name + '</span>\'">';
+      }
+      
+      // ========== СОЗДАЁМ МИНИАТЮРЫ ==========
+      if (thumbsContainer) {
+        thumbsContainer.innerHTML = '';
+        
+        // Основная картинка
+        var mainImage = product.image || '/images/placeholder.jpg';
+        addThumb(mainImage, product.name, 0);
+        
+        // Дополнительные картинки (если есть в поле props или создаём заглушки)
+        var extraImages = [];
+        
+        // Если у товара есть дополнительные картинки в props
+        if (product.props && product.props.length) {
+          // Ищем картинки в props (формат: image1, image2 и т.д.)
+          product.props.forEach(function(prop) {
+            if (prop.startsWith('image:')) {
+              extraImages.push(prop.replace('image:', ''));
+            }
+          });
+        }
+        
+        // Если нет доп. картинок — создаём заглушки
+        if (extraImages.length === 0) {
+          // Заглушки с названием продукта
+          extraImages.push('/images/placeholder.jpg', '/images/placeholder.jpg');
+        }
+        
+        // Добавляем миниатюры
+        extraImages.forEach(function(img, index) {
+          addThumb(img, product.name + ' ' + (index + 2), index + 1);
+        });
+      }
+      
+      function addThumb(src, alt, index) {
+        var thumb = document.createElement('button');
+        thumb.className = 'gallery-thumb' + (index === 0 ? ' active' : '');
+        thumb.dataset.index = index;
+        thumb.setAttribute('aria-label', 'Фото ' + (index + 1));
+        thumb.innerHTML = '<img src="' + src + '" alt="' + alt + '" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<div class=\\\'thumb-placeholder\\\'>' + (index + 1) + '</div>\'">';
+        
+        thumb.addEventListener('click', function() {
+          // Меняем активный класс
+          document.querySelectorAll('.gallery-thumb').forEach(function(t) {
+            t.classList.remove('active');
+          });
+          thumb.classList.add('active');
+          
+          // Меняем главное фото
+          var mainPhotoEl = document.getElementById('main-photo');
+          if (mainPhotoEl) {
+            mainPhotoEl.innerHTML = '<img src="' + src + '" alt="' + alt + '" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span class=\\\'product-photo-label\\\'>' + product.name + '</span>\'">';
+          }
+        });
+        
+        thumbsContainer.appendChild(thumb);
+      }
+      
+      // ========== ОБНОВЛЯЕМ ЦЕНУ ПРИ СМЕНЕ УПАКОВКИ ==========
+      document.querySelectorAll('.pack-option').forEach(function(opt) {
+        opt.addEventListener('click', function() {
+          document.querySelectorAll('.pack-option').forEach(function(o) { o.classList.remove('active'); });
+          opt.classList.add('active');
+          currentPack = opt.dataset.pack;
+          var price = prices[currentPack];
+          document.getElementById('product-price').textContent = SeaChips.formatPrice(price);
+          document.getElementById('sticky-price').textContent = SeaChips.formatPrice(price);
+        });
+      });
+      
+      // ========== КОЛИЧЕСТВО ==========
+      document.getElementById('qty-minus').addEventListener('click', function() {
+        if (qty > 1) { qty--; document.getElementById('qty-value').textContent = qty; }
+      });
+      document.getElementById('qty-plus').addEventListener('click', function() {
+        qty++; document.getElementById('qty-value').textContent = qty;
+      });
+      
+      // ========== ДОБАВЛЕНИЕ В КОРЗИНУ ==========
+      function addToCart() {
+        var cartId = currentPack === 'multi' ? 'multipack-beet' : product.id;
+        SeaChips.addToCart(cartId, qty);
+        updateBadge();
+      }
+      
+      document.getElementById('add-to-cart-btn').addEventListener('click', addToCart);
+      document.getElementById('sticky-add').addEventListener('click', addToCart);
+      
+      // ========== БЕЙДЖ ==========
+      function updateBadge() {
+        var badge = document.querySelector('.cart-badge');
+        if (badge) {
+          var count = SeaChips.getCartCount() || 0;
+          badge.textContent = count;
+        }
+      }
+      updateBadge();
+      window.addEventListener('cart:updated', updateBadge);
+      
+      // ========== СТИКЕР ==========
+      var stickyBar = document.getElementById('sticky-bar');
+      window.addEventListener('scroll', function() {
+        stickyBar.classList.toggle('visible', window.scrollY > 400);
+      }, { passive: true });
+      
+      // ========== ТАБЫ ==========
+      document.querySelectorAll('.product-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('.product-tab').forEach(function(t) { t.classList.remove('active'); });
+          document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+      });
+      
+      // ========== РЕКОМЕНДОВАННЫЕ ТОВАРЫ ==========
+      var relatedContainer = document.getElementById('related-products');
+      if (relatedContainer) {
+        var allProducts = SeaChips.getAllProducts();
+        var related = allProducts.filter(function(p) { return p.id !== product.id; }).slice(0, 3);
+        
+        relatedContainer.innerHTML = '';
+        related.forEach(function(p) {
+          relatedContainer.insertAdjacentHTML('beforeend', SeaChips.renderProductCard(p));
+        });
+        SeaChips.bindAddToCartButtons(relatedContainer);
+      }
+      
+      console.log('6. Рендер завершён!');
+    } catch (error) {
+      console.error('Ошибка на странице товара:', error);
+    }
+  });
+</script>
+</body>
+</html>
