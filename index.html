@@ -3,81 +3,103 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sea Chips — Прототип интернет-магазина</title>
+  <title>Sea Chips — Чипсы из морской капусты</title>
   <link rel="stylesheet" href="css/sea-chips.css" />
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Инициализация клиента -->
+  <script>
+    const supabaseUrl = 'https://yaukapdyrbefzrifqifa.supabase.co'
+    const supabaseKey = 'sb_publishable_KbCQKRekMG883j7KYPz9EQ_Wei3_HeH'
+    window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+  </script>
+  
   <style>
-    .launcher {
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
+    /* Hero */
+    .hero {
+      padding: 32px 0 48px;
+      overflow: hidden;
     }
-    .launcher-hero {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      padding: 48px 0;
-    }
-    .launcher-grid {
+    .hero-grid {
       display: grid;
-      gap: 48px;
+      gap: 32px;
       align-items: center;
     }
-    .launcher-intro h1 {
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 5vw, 2.75rem);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: 16px;
-    }
-    .launcher-intro h1 em {
-      font-style: normal;
-      color: var(--sea);
-    }
-    .launcher-intro p {
-      font-size: 1.125rem;
-      color: var(--muted);
-      max-width: 48ch;
-      margin-bottom: 28px;
-    }
-    .launcher-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 32px;
-    }
-    .launcher-meta span {
+    .hero-content { max-width: 540px; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 6px 14px;
-      background: var(--sea-light);
-      color: var(--sea-dark);
+      background: var(--beet-light);
+      color: var(--beet);
       border-radius: 999px;
       font-size: 0.8125rem;
       font-weight: 600;
+      margin-bottom: 16px;
     }
-    .screen-cards {
-      display: grid;
-      gap: 16px;
+    .hero-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(2rem, 6vw, 3rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
     }
-    .screen-card {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 16px;
-      align-items: center;
-      padding: 20px 24px;
+    .hero-title em {
+      font-style: normal;
+      color: var(--sea);
+    }
+    .hero-sub {
+      font-size: 1.125rem;
+      color: var(--muted);
+      margin-bottom: 28px;
+      max-width: 42ch;
+    }
+    .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; }
+    .hero-visual {
+      position: relative;
+    }
+    .hero-visual .product-photo {
+      aspect-ratio: 4/3;
+      min-height: 280px;
+    }
+    .hero-float {
+      position: absolute;
+      padding: 12px 16px;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      transition: all 0.3s var(--ease);
-    }
-    .screen-card:hover {
-      border-color: var(--sea);
-      transform: translateX(4px);
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
+      font-size: 0.875rem;
+      font-weight: 600;
     }
-    .screen-num {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
+    .hero-float-1 { top: 16px; right: -8px; }
+    .hero-float-2 { bottom: 24px; left: -8px; background: var(--sea); color: white; }
+    @media (min-width: 900px) {
+      .hero { padding: 48px 0 64px; }
+      .hero-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Process */
+    .process-steps {
+      display: grid;
+      gap: 24px;
+    }
+    .process-step {
+      display: flex;
+      gap: 20px;
+      padding: 24px;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+    .process-num {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
       background: var(--sea-light);
       color: var(--sea-dark);
       font-family: var(--font-display);
@@ -85,131 +107,342 @@
       display: grid;
       place-items: center;
     }
-    .screen-card h3 {
+    .process-step h3 {
       font-family: var(--font-display);
       font-weight: 600;
-      font-size: 1.0625rem;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
-    .screen-card p {
-      font-size: 0.875rem;
-      color: var(--muted);
+    .process-step p { font-size: 0.9375rem; color: var(--muted); }
+    @media (min-width: 768px) {
+      .process-steps { grid-template-columns: repeat(3, 1fr); }
+      .process-step { flex-direction: column; text-align: center; align-items: center; }
     }
-    .screen-arrow {
-      color: var(--sea);
-      font-size: 1.25rem;
+
+    /* Brand story */
+    .brand-story {
+      display: grid;
+      gap: 32px;
+      align-items: center;
+      background: var(--surface-warm);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      border: 1px solid var(--border);
     }
-    .launcher-visual .product-photo {
-      aspect-ratio: 4/3;
-      min-height: 240px;
+    @media (min-width: 768px) {
+      .brand-story { grid-template-columns: 1fr 1fr; padding: 48px; }
     }
-    @media (min-width: 900px) {
-      .launcher-grid { grid-template-columns: 1fr 1fr; }
-      .screen-cards { grid-template-columns: 1fr; }
+
+    /* Newsletter */
+    .newsletter {
+      background: linear-gradient(135deg, var(--sea-dark) 0%, var(--sea) 100%);
+      border-radius: var(--radius-lg);
+      padding: 40px 32px;
+      color: white;
+      text-align: center;
     }
-    @media (min-width: 1100px) {
-      .launcher-grid { grid-template-columns: 1.1fr 0.9fr; }
+    .newsletter h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      margin-bottom: 8px;
     }
+    .newsletter p { opacity: 0.85; margin-bottom: 24px; }
+    .newsletter-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .newsletter-form input {
+      padding: 14px 18px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+    }
+    .newsletter-form .btn { background: var(--beet); }
+    @media (min-width: 480px) {
+      .newsletter-form { flex-direction: row; }
+      .newsletter-form input { flex: 1; }
+    }
+    
+    .cart-badge {
+      background: var(--sea);
+      color: white;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: -6px;
+      right: -8px;
+    }
+    .icon-btn { position: relative; }
   </style>
 </head>
-
-<body class="launcher">
+<body>
 
 <header class="site-header">
   <div class="container header-inner">
-    <a href="index.html" class="logo">
+    <a href="home.html" class="logo">
       <span class="logo-mark">🌊</span>
       Sea Chips
     </a>
+    <nav class="nav-desktop">
+      <a href="home.html" class="active">Главная</a>
+      <a href="catalog.html">Каталог</a>
+      <a href="product.html?id=beet-basil">Продукт</a>
+    </nav>
     <div class="header-actions">
-      <a href="home.html" class="btn btn-primary btn-sm">Открыть магазин</a>
+      <a href="cart.html" class="icon-btn" aria-label="Корзина">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 9H7.5L6 6z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M6 6L5 3H2"/></svg>
+        <span class="cart-badge">0</span>
+      </a>
+      <button class="icon-btn menu-toggle" aria-label="Меню">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
     </div>
   </div>
 </header>
 
-<main class="launcher-hero">
-  <div class="container launcher-grid">
-    <div class="launcher-intro">
-      <div class="launcher-meta">
-        <span>6 экранов</span>
-        <span>Mobile-first</span>
-        <span>D2C-ready</span>
-      </div>
-      <h1>Sea Chips — <em>прототип</em> интернет-магазина</h1>
-      <p>Премиальный D2C-бренд чипсов из морской капусты. Адаптивный веб с рабочей корзиной, фильтрами каталога и оформлением заказа.</p>
-      <a href="home.html" class="btn btn-primary">Начать с главной →</a>
+<nav class="mobile-nav" aria-label="Мобильное меню">
+  <button class="icon-btn mobile-nav-close" aria-label="Закрыть">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <a href="home.html">Главная</a>
+  <a href="catalog.html">Каталог</a>
+  <a href="product.html?id=beet-basil">Продукт</a>
+  <a href="cart.html">Корзина</a>
+</nav>
 
-      <div class="screen-cards" style="margin-top:40px;">
-        <a href="home.html" class="screen-card">
-          <span class="screen-num">01</span>
-          <div>
-            <h3>Главная</h3>
-            <p>Hero, преимущества, процесс, отзывы, подписка</p>
-          </div>
-          <span class="screen-arrow">→</span>
-        </a>
-        <a href="catalog.html" class="screen-card">
-          <span class="screen-num">02</span>
-          <div>
-            <h3>Каталог</h3>
-            <p>Фильтры по вкусу, формату и свойствам · сортировка</p>
-          </div>
-          <span class="screen-arrow">→</span>
-        </a>
-        <a href="product.html?id=beet-basil" class="screen-card">
-          <span class="screen-num">03</span>
-          <div>
-            <h3>Карточка товара</h3>
-            <p>Галерея, варианты упаковки, состав, пищевая ценность</p>
-          </div>
-          <span class="screen-arrow">→</span>
-        </a>
-        <a href="cart-v2.html" class="screen-card">
-          <span class="screen-num">04</span>
-          <div>
-            <h3>Корзина v2</h3>
-            <p>Крупные карточки, прогресс доставки, промокод, sticky итого</p>
-          </div>
-          <span class="screen-arrow">→</span>
-        </a>
-        <a href="checkout-v2.html" class="screen-card">
-          <span class="screen-num">05</span>
-          <div>
-            <h3>Оформление v2</h3>
-            <p>3 шага: контакты → доставка → оплата · Shopify UX</p>
-          </div>
-          <span class="screen-arrow">→</span>
-        </a>
-        <a href="order-success.html" class="screen-card">
-          <span class="screen-num">06</span>
-          <div>
-            <h3>Заказ оформлен</h3>
-            <p>Подтверждение, номер заказа, статус оплаты, состав</p>
-          </div>
-          <span class="screen-arrow">→</span>
-        </a>
+<main>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-content animate-in">
+        <span class="hero-badge">Суперфуд · 100% растительный</span>
+        <h1 class="hero-title">Чипсы из морской капусты с <em>свеклой и базиликом</em></h1>
+        <p class="hero-sub">Полезный и хрустящий снек из ламинарии. Богат йодом, клетчаткой и минералами моря — без компромиссов по вкусу.</p>
+        <div class="hero-cta">
+          <a href="product.html?id=beet-basil" class="btn btn-primary">Купить сейчас</a>
+          <a href="catalog.html" class="btn btn-secondary">Все вкусы</a>
+        </div>
+      </div>
+      <div class="hero-visual animate-in animate-in-delay-1">
+        <div class="product-photo">
+  <img src="/images/hero-sea-chips.png" alt="Sea Chips" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\'product-photo-label\'>Sea Chips · свекла + базилик</span>'">
+</div>
+        <span class="hero-float hero-float-1">−40% калорий vs обычные чипсы</span>
+        <span class="hero-float hero-float-2">от 169 ₽</span>
       </div>
     </div>
+  </section>
 
-    <div class="launcher-visual">
-      <div class="product-photo">
-        <span class="product-photo-label">Sea Chips · свекла + базилик · суперфуд</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-        <div style="padding:16px;background:var(--sea-light);border-radius:var(--radius);text-align:center;">
-          <strong style="font-family:var(--font-display);color:var(--sea-dark);">Морской зелёный</strong>
-          <p style="font-size:0.75rem;color:var(--muted);margin-top:4px;">Primary CTA</p>
+  <!-- Преимущества -->
+  <section class="section">
+    <div class="container">
+      <div class="feature-row">
+        <div class="feature-item">
+          <div class="feature-icon">🌿</div>
+          <h3>Натуральный состав</h3>
+          <p>Только ламинария, свёкла, базилик и морская соль — без искусственных красителей</p>
         </div>
-        <div style="padding:16px;background:var(--beet-light);border-radius:var(--radius);text-align:center;">
-          <strong style="font-family:var(--font-display);color:var(--beet);">Свекольный</strong>
-          <p style="font-size:0.75rem;color:var(--muted);margin-top:4px;">Accent · badges</p>
+        <div class="feature-item">
+          <div class="feature-icon">🧂</div>
+          <h3>Минералы моря</h3>
+          <p>Йод, магний, железо и калий — всё, что дарит океан, в каждой порции</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <h3>Лёгкий перекус</h3>
+          <p>~90 ккал на порцию — хруст без тяжести, идеально после тренировки</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🌱</div>
+          <h3>100% vegan</h3>
+          <p>Растительный продукт для всех, кто следит за питанием и этикой потребления</p>
         </div>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- Как это сделано -->
+  <section class="section" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-kicker">Производство</p>
+        <h2 class="section-title">Как это сделано</h2>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <span class="process-num">1</span>
+          <div>
+            <h3>Отбор ламинарии</h3>
+            <p>Экологичный сбор водорослей на Дальнем Востоке — только зрелые листья с максимальной питательностью</p>
+          </div>
+        </div>
+        <div class="process-step">
+          <span class="process-num">2</span>
+          <div>
+            <h3>Натуральные добавки</h3>
+            <p>Сок свёклы, свежий базилик и морская соль — без усилителей вкуса и консервантов</p>
+          </div>
+        </div>
+        <div class="process-step">
+          <span class="process-num">3</span>
+          <div>
+            <h3>Бережная сушка</h3>
+            <p>Низкотемпературная сушка сохраняет хруст, цвет и все полезные вещества</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Популярные товары -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;">
+        <div>
+          <p class="section-kicker">Каталог</p>
+          <h2 class="section-title">Популярные вкусы</h2>
+        </div>
+        <a href="catalog.html" class="btn btn-secondary btn-sm">Смотреть все →</a>
+      </div>
+      <div class="grid-3" id="popular-products"></div>
+    </div>
+  </section>
+
+  <!-- Отзывы -->
+  <section class="section" style="background: var(--surface-warm);">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-kicker">Отзывы</p>
+        <h2 class="section-title">Что говорят покупатели</h2>
+      </div>
+      <div class="grid-3">
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">«Наконец-то чипсы, которые не стыдно есть каждый день. Свекла с базиликом — неожиданно вкусно, заказываю уже третий раз.»</p>
+          <span class="review-author">Алина К., Москва</span>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">«Беру в офис вместо снеков из автомата. Хрустят как настоящие, но состав — просто водоросли и специи. Рекомендую мультипак.»</p>
+          <span class="review-author">Дмитрий В., Санкт-Петербург</span>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★☆</div>
+          <p class="review-text">«Дочь-веган в восторге. Единственное — хотелось бы больше острых вкусов. Ждём новинки.»</p>
+          <span class="review-author">Елена М., Казань</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- История бренда -->
+  <section class="section">
+    <div class="container">
+      <div class="brand-story">
+        <div>
+          <p class="section-kicker">О бренде</p>
+          <h2 class="section-title" style="margin-bottom:16px;">Из моря — на ваш стол</h2>
+          <p style="color:var(--muted);margin-bottom:16px;">Sea Chips родился из простой идеи: сделать суперфуд из морских водорослей таким же привычным перекусом, как любимые снеки — но без вреда для здоровья и планеты.</p>
+          <p style="color:var(--muted);">Мы работаем напрямую с фермерами-аквакультуристами, используем переработанную упаковку и сушим при температуре, которая сохраняет 98% минералов ламинарии.</p>
+        </div>
+        <div class="product-photo" style="aspect-ratio:16/10;min-height:200px;overflow:hidden;border-radius:var(--radius);">
+  <img src="https://s9.travelask.ru/uploads/post/000/012/374/main_image/facebook-f15264c85a52e9501f7c3d68b300fbb1.jpg" alt="Ферма ламинарии" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\'product-photo-label\'>Ферма ламинарии · Приморский край</span>'">
+</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Подписка -->
+  <section class="section">
+    <div class="container">
+      <div class="newsletter">
+        <h2>−10% на первый заказ</h2>
+        <p>Подпишитесь на новости — расскажем о новых вкусах и акциях</p>
+        <form class="newsletter-form" id="newsletter-form">
+          <input type="email" placeholder="your@email.ru" required aria-label="Email" />
+          <button type="submit" class="btn btn-beet">Подписаться</button>
+        </form>
+      </div>
+    </div>
+  </section>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase.js"></script>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="logo" style="color:white;margin-bottom:12px;">
+          <span class="logo-mark">🌊</span> Sea Chips
+        </div>
+        <p style="opacity:0.7;font-size:0.9375rem;">Полезные чипсы из морской капусты. Суперфуд, который хрустит.</p>
+      </div>
+      <div>
+        <h4>Магазин</h4>
+        <a href="catalog.html">Каталог</a>
+        <a href="product.html?id=beet-basil">Свекла и базилик</a>
+        <a href="cart.html">Корзина</a>
+      </div>
+      <div>
+        <h4>Компания</h4>
+        <a href="#">О нас</a>
+        <a href="#">Доставка</a>
+        <a href="#">Контакты</a>
+      </div>
+      <div>
+        <h4>Связь</h4>
+        <a href="mailto:hello@seachips.ru">hello@seachips.ru</a>
+        <a href="#">Telegram</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 Sea Chips. Все права защищены.</div>
+  </div>
+</footer>
+
 <script src="js/sea-chips.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Загружаем товары
+    await SeaChips.loadProducts();
+    var products = SeaChips.getAllProducts();
+    var popularIds = ['buckwheat-hemp-mushroom', 'mushroom-carrot', 'mushroom-potato-dill'];
+    var popular = products.filter(function(p) { return popularIds.includes(p.id); });
+    
+    // Рендерим популярные товары
+    var container = document.getElementById('popular-products');
+    if (container) {
+      container.innerHTML = '';
+      popular.forEach(function(p) {
+        container.insertAdjacentHTML('beforeend', SeaChips.renderProductCard(p));
+      });
+      SeaChips.bindAddToCartButtons(container);
+    }
+    
+    // Обновление бейджа корзины
+    function updateBadge() {
+      var badge = document.querySelector('.cart-badge');
+      if (badge) {
+        var count = SeaChips.getCartCount() || 0;
+        badge.textContent = count;
+      }
+    }
+    updateBadge();
+    window.addEventListener('cart:updated', updateBadge);
+    
+    // Подписка
+    document.getElementById('newsletter-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      SeaChips.showToast('Спасибо! Промокод SEACHIPS10 отправлен на email');
+      e.target.reset();
+    });
+  });
+</script>
 </body>
 </html>
