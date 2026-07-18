@@ -1,4 +1,4 @@
-// sea-chips.js — ускоренная версия с кешированием
+// sea-chips.js — максимально ускоренная версия
 (function() {
   'use strict';
 
@@ -6,7 +6,7 @@
     STORE_KEY: 'seachips:cart',
     CACHE_KEY: 'seachips:products',
     CACHE_TIME_KEY: 'seachips:products_time',
-    CACHE_TTL: 300000, // 5 минут кеширования
+    CACHE_TTL: 3600000, // 1 час кеширования (было 5 минут)
     SUPABASE_URL: 'https://yaukapdyrbefzrifqifa.supabase.co',
     SUPABASE_KEY: 'sb_publishable_KbCQKRekMG883j7KYPz9EQ_Wei3_HeH',
     PROMO_KEY: 'SEACHIPS10'
@@ -15,115 +15,138 @@
   let products = [];
   let productsLoaded = false;
   let isLoading = false;
+  let loadPromise = null;
 
   function initSupabase() {
     if (window.supabaseClient) return window.supabaseClient;
-    const client = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-    window.supabaseClient = client;
-    return client;
+    try {
+      const client = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+      window.supabaseClient = client;
+      return client;
+    } catch (e) {
+      console.warn('⚠️ Supabase не инициализирован, использую кеш');
+      return null;
+    }
   }
 
   // ========== ЗАГРУЗКА ТОВАРОВ С КЕШИРОВАНИЕМ ==========
-  async function loadProductsFromSupabase(force = false) {
-    // Если уже загружено и не принудительно — возвращаем
-    if (productsLoaded && !force) {
-      console.log('📦 Товары уже загружены, возвращаю кэш');
-      return products;
-    }
+  function loadProductsFromSupabase(force = false) {
+    // Если уже есть промис — возвращаем его (чтобы не дублировать запросы)
+    if (loadPromise) return loadPromise;
 
-    // Проверяем кеш в localStorage
-    if (!force) {
-      const cached = localStorage.getItem(CONFIG.CACHE_KEY);
-      const cachedTime = localStorage.getItem(CONFIG.CACHE_TIME_KEY);
-      
-      if (cached && cachedTime) {
-        const now = Date.now();
-        const age = now - parseInt(cachedTime);
+    loadPromise = new Promise(async (resolve) => {
+      // 1. Проверяем память
+      if (productsLoaded && !force) {
+        console.log('📦 Из памяти:', products.length);
+        resolve(products);
+        return;
+      }
+
+      // 2. Проверяем кеш в localStorage
+      if (!force) {
+        const cached = localStorage.getItem(CONFIG.CACHE_KEY);
+        const cachedTime = localStorage.getItem(CONFIG.CACHE_TIME_KEY);
         
-        if (age < CONFIG.CACHE_TTL) {
-          try {
-            const parsed = JSON.parse(cached);
-            if (parsed && parsed.length) {
-              console.log('📦 Загружено из кеша (', Math.round(age / 1000), 'сек назад)');
-              products = parsed;
-              productsLoaded = true;
-              return products;
-            }
-          } catch (e) {
-            console.warn('Кеш повреждён, загружаю из Supabase');
+        if (cached && cachedTime) {
+          const age = Date.now() - parseInt(cachedTime);
+          if (age < CONFIG.CACHE_TTL) {
+            try {
+              const parsed = JSON.parse(cached);
+              if (parsed && parsed.length) {
+                console.log('📦 Из кеша:', parsed.length, 'товаров');
+                products = parsed;
+                productsLoaded = true;
+                resolve(products);
+                loadPromise = null;
+                return;
+              }
+            } catch (e) {}
           }
-        } else {
-          console.log('⏳ Кеш устарел, загружаю из Supabase');
         }
       }
-    }
 
-    // Если уже идёт загрузка — ждём
-    if (isLoading) {
-      console.log('⏳ Загрузка уже идёт, ждём...');
-      return new Promise(resolve => {
-        const checkLoaded = setInterval(() => {
-          if (productsLoaded) {
-            clearInterval(checkLoaded);
+      // 3. Загружаем из Supabase
+      if (isLoading) {
+        // Ждём завершения текущей загрузки
+        const waitForLoad = setInterval(() => {
+          if (!isLoading) {
+            clearInterval(waitForLoad);
             resolve(products);
+            loadPromise = null;
           }
-        }, 100);
-      });
-    }
-
-    isLoading = true;
-    console.log('🌊 Загружаю товары из Supabase...');
-
-    try {
-      const client = initSupabase();
-      const { data, error } = await client.from('products').select('*');
-
-      if (error) {
-        console.error('❌ Ошибка Supabase:', error);
-        isLoading = false;
-        return [];
+        }, 50);
+        return;
       }
 
-      console.log('📦 Получено товаров:', data?.length || 0);
+      isLoading = true;
+      console.log('🌊 Загрузка из Supabase...');
 
-      products = data.map(p => ({
-        id: p.id,
-        article_number: p.article_number,
-        name: p.name || 'Без названия',
-        price: p.price || 0,
-        description: p.description || 'Хрустящие чипсы из морской капусты',
-        weight: p.weight || '90 г',
-        image: p.image || '/images/placeholder.jpg',
-        flavor: p.flavor || '',
-        format: p.format || 'single',
-        tags: Array.isArray(p.tags) ? p.tags : [],
-        props: Array.isArray(p.props) ? p.props : [],
-        in_stock: p.in_stock !== false
-      }));
-
-      // Сохраняем в кеш
       try {
-        localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(products));
-        localStorage.setItem(CONFIG.CACHE_TIME_KEY, String(Date.now()));
-        console.log('💾 Товары сохранены в кеш');
-      } catch (e) {
-        console.warn('Не удалось сохранить кеш:', e);
-      }
+        const client = initSupabase();
+        if (!client) {
+          // Если Supabase недоступен — возвращаем пустой массив
+          isLoading = false;
+          loadPromise = null;
+          resolve([]);
+          return;
+        }
 
-      productsLoaded = true;
-      isLoading = false;
-      console.log('✅ Товаров загружено:', products.length);
-      
-      window.dispatchEvent(new CustomEvent('products:loaded', { detail: products }));
-      return products;
-    } catch (error) {
-      console.error('❌ Ошибка при загрузке:', error);
-      isLoading = false;
-      return [];
-    }
+        const { data, error } = await client.from('products').select('*');
+
+        if (error) throw error;
+
+        products = (data || []).map(p => ({
+          id: p.id,
+          article_number: p.article_number,
+          name: p.name || 'Без названия',
+          price: p.price || 0,
+          description: p.description || 'Хрустящие чипсы из морской капусты',
+          weight: p.weight || '90 г',
+          image: p.image || '/images/placeholder.jpg',
+          flavor: p.flavor || '',
+          format: p.format || 'single',
+          tags: Array.isArray(p.tags) ? p.tags : [],
+          props: Array.isArray(p.props) ? p.props : [],
+          in_stock: p.in_stock !== false
+        }));
+
+        // Сохраняем в кеш
+        try {
+          localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(products));
+          localStorage.setItem(CONFIG.CACHE_TIME_KEY, String(Date.now()));
+        } catch (e) {}
+
+        productsLoaded = true;
+        console.log('✅ Загружено:', products.length, 'товаров');
+        
+        window.dispatchEvent(new CustomEvent('products:loaded', { detail: products }));
+        resolve(products);
+      } catch (error) {
+        console.warn('⚠️ Ошибка загрузки, использую кеш если есть');
+        // Если есть старый кеш — используем его даже если просрочен
+        const cached = localStorage.getItem(CONFIG.CACHE_KEY);
+        if (cached) {
+          try {
+            products = JSON.parse(cached);
+            productsLoaded = true;
+            console.log('📦 Экстренный кеш:', products.length);
+            resolve(products);
+          } catch (e) {
+            resolve([]);
+          }
+        } else {
+          resolve([]);
+        }
+      } finally {
+        isLoading = false;
+        loadPromise = null;
+      }
+    });
+
+    return loadPromise;
   }
 
-  // ========== ОСТАЛЬНЫЕ ФУНКЦИИ ==========
+  // ========== КОРЗИНА ==========
   function getCart() {
     try {
       return JSON.parse(localStorage.getItem(CONFIG.STORE_KEY)) || [];
@@ -140,7 +163,7 @@
   function addToCart(productId, quantity = 1) {
     const product = getProductById(productId);
     if (!product) {
-      console.error('❌ Товар не найден:', productId);
+      showToast('Товар не найден');
       return;
     }
 
@@ -160,7 +183,7 @@
     }
 
     saveCart(cart);
-    showToast(`${product.name} добавлен в корзину`);
+    showToast(`${product.name} +${quantity} в корзине`);
   }
 
   function updateQty(productId, quantity) {
@@ -205,7 +228,7 @@
     return price.toLocaleString('ru-RU') + ' ₽';
   }
 
-  // ========== РЕНДЕР КАРТОЧКИ С LAZY LOADING ==========
+  // ========== РЕНДЕР КАРТОЧКИ ==========
   function renderProductCard(product) {
     if (!product) return '';
     
@@ -226,6 +249,7 @@
                loading="lazy" 
                width="300" 
                height="300"
+               decoding="async"
                onerror="this.src='/images/placeholder.jpg'">
           <div class="product-badges">${tagsHtml}</div>
         </div>
@@ -254,17 +278,19 @@
     });
   }
 
+  // ========== TOAST ==========
   function showToast(message, duration = 3000) {
     let toast = document.querySelector('.toast');
     if (!toast) {
       toast = document.createElement('div');
       toast.className = 'toast';
-      toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e2a2e;color:white;padding:12px 24px;border-radius:999px;font-size:14px;z-index:1000;opacity:0;transition:opacity 0.2s;pointer-events:none;';
+      toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e2a2e;color:white;padding:12px 24px;border-radius:999px;font-size:14px;z-index:1000;opacity:0;transition:opacity 0.2s;pointer-events:none;font-family:sans-serif;';
       document.body.appendChild(toast);
     }
     toast.textContent = message;
     toast.style.opacity = '1';
-    setTimeout(() => { toast.style.opacity = '0'; }, duration);
+    clearTimeout(toast._hide);
+    toast._hide = setTimeout(() => { toast.style.opacity = '0'; }, duration);
   }
 
   function getQueryParam(param) {
@@ -294,5 +320,5 @@
     PROMO_KEY: CONFIG.PROMO_KEY
   };
 
-  console.log('✅ SeaChips модуль загружен');
+  console.log('✅ SeaChips модуль загружен (ускоренная версия)');
 })();
