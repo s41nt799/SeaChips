@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Корзина — Sea Chips</title>
+  <link rel="stylesheet" href="css/sea-chips.css" />
+  
+  <!-- ========== ДОБАВЬ ЭТОТ БЛОК ========== -->
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Инициализация клиента -->
+  <script>
+    const supabaseUrl = 'https://yaukapdyrbefzrifqifa.supabase.co'
+    const supabaseKey = 'ТВОЙ_ANON_KEY'  // 🔥 ЗАМЕНИ НА СВОЙ КЛЮЧ
+    window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+  </script>
+  <!-- ====================================== -->
+  
+  <style>
+    .cart-page { padding: 32px 0 48px; }
+    .cart-page h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .cart-layout {
+      display: grid;
+      gap: 32px;
+    }
+    .cart-item {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 16px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .cart-item-photo .product-photo {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      min-height: auto;
+    }
+    .cart-item-info h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+    .cart-item-info p { font-size: 0.875rem; color: var(--muted); }
+    .cart-item-price {
+      font-family: var(--font-display);
+      font-weight: 700;
+      text-align: right;
+    }
+    .cart-item-remove {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      text-decoration: underline;
+      margin-top: 8px;
+      display: inline-block;
+    }
+    .cart-item-remove:hover { color: var(--danger); }
+    .promo-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .promo-row input { flex: 1; }
+    .promo-success {
+      color: var(--success);
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-top: 8px;
+      display: none;
+    }
+    .promo-success.show { display: block; }
+    .delivery-options {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .delivery-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .delivery-option:has(input:checked) {
+      border-color: var(--sea);
+      background: var(--sea-light);
+    }
+    .delivery-option input { accent-color: var(--sea); width: 18px; height: 18px; }
+    .delivery-option-info { flex: 1; }
+    .delivery-option-info strong { display: block; font-size: 0.9375rem; }
+    .delivery-option-info span { font-size: 0.8125rem; color: var(--muted); }
+    .delivery-option-price { font-weight: 700; font-size: 0.9375rem; }
+    .empty-cart {
+      text-align: center;
+      padding: 64px 24px;
+    }
+    .empty-cart h2 {
+      font-family: var(--font-display);
+      margin-bottom: 12px;
+    }
+    @media (min-width: 900px) {
+      .cart-layout { grid-template-columns: 1fr 360px; align-items: start; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="home.html" class="logo">
+      <span class="logo-mark">🌊</span>
+      Sea Chips
+    </a>
+    <nav class="nav-desktop">
+      <a href="home.html">Главная</a>
+      <a href="catalog.html">Каталог</a>
+      <a href="product.html?id=beet-basil">Продукт</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart.html" class="icon-btn" aria-label="Корзина">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 9H7.5L6 6z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M6 6L5 3H2"/></svg>
+        <span class="cart-badge">0</span>
+      </a>
+      <button class="icon-btn menu-toggle" aria-label="Меню">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" aria-label="Мобильное меню">
+  <button class="icon-btn mobile-nav-close" aria-label="Закрыть">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <a href="home.html">Главная</a>
+  <a href="catalog.html">Каталог</a>
+  <a href="cart.html">Корзина</a>
+</nav>
+
+<main class="container cart-page">
+  <h1>Корзина</h1>
+
+  <div id="cart-empty" class="empty-cart" style="display:none;">
+    <h2>Корзина пуста</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">Добавьте чипсы из морской капусты — хруст ждёт</p>
+    <a href="catalog.html" class="btn btn-primary">Перейти в каталог</a>
+  </div>
+
+  <div class="cart-layout" id="cart-content">
+    <div>
+      <div id="cart-items"></div>
+
+      <div class="promo-row">
+        <input type="text" class="form-input" id="promo-input" placeholder="Промокод" aria-label="Промокод" />
+        <button class="btn btn-secondary" id="promo-apply">Применить</button>
+      </div>
+      <p class="promo-success" id="promo-success">Промокод SEACHIPS10 применён — скидка 10%</p>
+
+      <div style="margin-top:32px;">
+        <h3 style="font-family:var(--font-display);font-size:1.125rem;margin-bottom:4px;">Доставка</h3>
+        <p style="font-size:0.875rem;color:var(--muted);margin-bottom:12px;">Бесплатно от 1 500 ₽</p>
+        <div class="delivery-options">
+          <label class="delivery-option">
+            <input type="radio" name="delivery" value="courier" checked />
+            <div class="delivery-option-info">
+              <strong>Курьером</strong>
+              <span>Завтра, 10:00–22:00</span>
+            </div>
+            <span class="delivery-option-price" id="delivery-courier-price">299 ₽</span>
+          </label>
+          <label class="delivery-option">
+            <input type="radio" name="delivery" value="pickup" />
+            <div class="delivery-option-info">
+              <strong>Пункт выдачи</strong>
+              <span>1–2 дня</span>
+            </div>
+            <span class="delivery-option-price">149 ₽</span>
+          </label>
+          <label class="delivery-option">
+            <input type="radio" name="delivery" value="express" />
+            <div class="delivery-option-info">
+              <strong>Экспресс</strong>
+              <span>Сегодня, 2–4 часа</span>
+            </div>
+            <span class="delivery-option-price">499 ₽</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <aside class="order-summary">
+      <h3 style="font-family:var(--font-display);font-size:1.125rem;margin-bottom:16px;">Итого</h3>
+      <div class="order-summary-row">
+        <span>Товары (<span id="summary-count">0</span>)</span>
+        <span id="summary-subtotal">0 ₽</span>
+      </div>
+      <div class="order-summary-row">
+        <span>Скидка</span>
+        <span id="summary-discount" style="color:var(--success);">0 ₽</span>
+      </div>
+      <div class="order-summary-row">
+        <span>Доставка</span>
+        <span id="summary-delivery">299 ₽</span>
+      </div>
+      <div class="order-summary-row total">
+        <span>К оплате</span>
+        <span id="summary-total">0 ₽</span>
+      </div>
+      <a href="checkout.html" class="btn btn-primary btn-block" id="checkout-btn" style="margin-top:20px;">Оформить заказ</a>
+      <a href="catalog.html" style="display:block;text-align:center;margin-top:12px;font-size:0.875rem;color:var(--muted);">← Продолжить покупки</a>
+    </aside>
+  </div>
+</main>
+
+<script src="js/sea-chips.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var promoApplied = false;
+    var deliveryPrices = { courier: 299, pickup: 149, express: 499 };
+    var freeDeliveryFrom = 1500;
+
+    function getDeliveryPrice() {
+      var selected = document.querySelector('input[name="delivery"]:checked');
+      var type = selected ? selected.value : 'courier';
+      var subtotal = SeaChips.getCartTotal();
+      if (subtotal >= freeDeliveryFrom && type !== 'express') return 0;
+      return deliveryPrices[type];
+    }
+
+    function renderCart() {
+      var cart = SeaChips.getCart();
+      var container = document.getElementById('cart-items');
+      var empty = document.getElementById('cart-empty');
+      var content = document.getElementById('cart-content');
+
+      if (!cart.length) {
+        empty.style.display = 'block';
+        content.style.display = 'none';
+        return;
+      }
+
+      empty.style.display = 'none';
+      content.style.display = 'grid';
+      container.innerHTML = '';
+
+      cart.forEach(function (item) {
+        var p = SeaChips.getProductById(item.id);
+        if (!p) return;
+        var lineTotal = p.price * item.qty;
+        container.insertAdjacentHTML('beforeend',
+          '<article class="cart-item" data-id="' + item.id + '">' +
+            '<div class="cart-item-photo"><div class="product-photo"><span class="product-photo-label" style="font-size:0.55rem">' + p.name + '</span></div></div>' +
+            '<div class="cart-item-info">' +
+              '<h3>' + p.name + '</h3>' +
+              '<p>' + p.weight + ' · ' + SeaChips.formatPrice(p.price) + '</p>' +
+              '<div class="qty-stepper" style="margin-top:10px;">' +
+                '<button type="button" data-qty-minus="' + item.id + '">−</button>' +
+                '<span>' + item.qty + '</span>' +
+                '<button type="button" data-qty-plus="' + item.id + '">+</button>' +
+              '</div>' +
+              '<button class="cart-item-remove" data-remove="' + item.id + '">Удалить</button>' +
+            '</div>' +
+            '<div class="cart-item-price">' + SeaChips.formatPrice(lineTotal) + '</div>' +
+          '</article>'
+        );
+      });
+
+      bindCartEvents();
+      updateSummary();
+    }
+
+    function updateSummary() {
+      var cart = SeaChips.getCart();
+      var subtotal = SeaChips.getCartTotal();
+      var count = SeaChips.getCartCount();
+      var discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
+      var delivery = getDeliveryPrice();
+      var total = subtotal - discount + delivery;
+
+      document.getElementById('summary-count').textContent = count;
+      document.getElementById('summary-subtotal').textContent = SeaChips.formatPrice(subtotal);
+      document.getElementById('summary-discount').textContent = discount ? '−' + SeaChips.formatPrice(discount) : '0 ₽';
+      document.getElementById('summary-delivery').textContent = delivery ? SeaChips.formatPrice(delivery) : 'Бесплатно';
+      document.getElementById('summary-total').textContent = SeaChips.formatPrice(total);
+
+      var courierEl = document.getElementById('delivery-courier-price');
+      if (courierEl) {
+        courierEl.textContent = subtotal >= freeDeliveryFrom ? 'Бесплатно' : '299 ₽';
+      }
+    }
+
+    function bindCartEvents() {
+      document.querySelectorAll('[data-qty-minus]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-qty-minus');
+          var item = SeaChips.getCart().find(function (i) { return i.id === id; });
+          if (item) SeaChips.updateQty(id, item.qty - 1);
+          renderCart();
+        });
+      });
+      document.querySelectorAll('[data-qty-plus]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-qty-plus');
+          var item = SeaChips.getCart().find(function (i) { return i.id === id; });
+          if (item) SeaChips.updateQty(id, item.qty + 1);
+          renderCart();
+        });
+      });
+      document.querySelectorAll('[data-remove]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          SeaChips.removeFromCart(btn.getAttribute('data-remove'));
+          renderCart();
+        });
+      });
+    }
+
+    document.getElementById('promo-apply').addEventListener('click', function () {
+      var code = document.getElementById('promo-input').value.trim().toUpperCase();
+      if (code === SeaChips.PROMO_KEY || code === 'SEACHIPS10') {
+        promoApplied = true;
+        document.getElementById('promo-success').classList.add('show');
+        SeaChips.showToast('Скидка 10% применена');
+        updateSummary();
+      } else {
+        SeaChips.showToast('Неверный промокод');
+      }
+    });
+
+    document.querySelectorAll('input[name="delivery"]').forEach(function (radio) {
+      radio.addEventListener('change', updateSummary);
+    });
+
+    window.addEventListener('cart:updated', renderCart);
+    renderCart();
+  });
+</script>
+</body>
+</html>
