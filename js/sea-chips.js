@@ -1,4 +1,4 @@
-// sea-chips.js — с бейджем и кнопкой-счётчиком
+// sea-chips.js — стабильная версия с бейджем
 (function() {
   'use strict';
 
@@ -6,7 +6,7 @@
     STORE_KEY: 'seachips:cart',
     CACHE_KEY: 'seachips:products',
     CACHE_TIME_KEY: 'seachips:products_time',
-    CACHE_TTL: 3600000, // 1 час кеширования
+    CACHE_TTL: 3600000,
     SUPABASE_URL: 'https://yaukapdyrbefzrifqifa.supabase.co',
     SUPABASE_KEY: 'sb_publishable_KbCQKRekMG883j7KYPz9EQ_Wei3_HeH',
     PROMO_KEY: 'SEACHIPS10'
@@ -24,33 +24,31 @@
       window.supabaseClient = client;
       return client;
     } catch (e) {
-      console.warn('⚠️ Supabase не инициализирован, использую кеш');
+      console.warn('⚠️ Supabase не инициализирован');
       return null;
     }
   }
 
-  // ========== ЗАГРУЗКА ТОВАРОВ С КЕШИРОВАНИЕМ ==========
+  // ========== ЗАГРУЗКА ТОВАРОВ ==========
   function loadProductsFromSupabase(force = false) {
     if (loadPromise) return loadPromise;
 
     loadPromise = new Promise(async (resolve) => {
       if (productsLoaded && !force) {
-        console.log('📦 Из памяти:', products.length);
         resolve(products);
+        loadPromise = null;
         return;
       }
 
       if (!force) {
         const cached = localStorage.getItem(CONFIG.CACHE_KEY);
         const cachedTime = localStorage.getItem(CONFIG.CACHE_TIME_KEY);
-        
         if (cached && cachedTime) {
           const age = Date.now() - parseInt(cachedTime);
           if (age < CONFIG.CACHE_TTL) {
             try {
               const parsed = JSON.parse(cached);
               if (parsed && parsed.length) {
-                console.log('📦 Из кеша:', parsed.length, 'товаров');
                 products = parsed;
                 productsLoaded = true;
                 resolve(products);
@@ -63,9 +61,9 @@
       }
 
       if (isLoading) {
-        const waitForLoad = setInterval(() => {
+        const wait = setInterval(() => {
           if (!isLoading) {
-            clearInterval(waitForLoad);
+            clearInterval(wait);
             resolve(products);
             loadPromise = null;
           }
@@ -74,8 +72,6 @@
       }
 
       isLoading = true;
-      console.log('🌊 Загрузка из Supabase...');
-
       try {
         const client = initSupabase();
         if (!client) {
@@ -109,18 +105,14 @@
         } catch (e) {}
 
         productsLoaded = true;
-        console.log('✅ Загружено:', products.length, 'товаров');
-        
         window.dispatchEvent(new CustomEvent('products:loaded', { detail: products }));
         resolve(products);
       } catch (error) {
-        console.warn('⚠️ Ошибка загрузки, использую кеш если есть');
         const cached = localStorage.getItem(CONFIG.CACHE_KEY);
         if (cached) {
           try {
             products = JSON.parse(cached);
             productsLoaded = true;
-            console.log('📦 Экстренный кеш:', products.length);
             resolve(products);
           } catch (e) {
             resolve([]);
@@ -176,15 +168,6 @@
 
     saveCart(cart);
     showToast(`${product.name} +${quantity} в корзине`);
-    
-    // Обновляем все кнопки на странице
-    document.querySelectorAll('.product-card').forEach(card => {
-      const btn = card.querySelector('.add-to-cart, .qty-control');
-      if (btn) {
-        const id = card.dataset.id;
-        renderCartButton(id, card);
-      }
-    });
   }
 
   function updateQty(productId, quantity) {
@@ -203,10 +186,6 @@
   function removeFromCart(productId) {
     const cart = getCart().filter(item => item.id !== productId);
     saveCart(cart);
-    // Обновляем кнопку
-    document.querySelectorAll(`.product-card[data-id="${productId}"]`).forEach(card => {
-      renderCartButton(productId, card);
-    });
   }
 
   function clearCart() {
@@ -233,87 +212,17 @@
     return price.toLocaleString('ru-RU') + ' ₽';
   }
 
-  // ========== БЕЙДЖ КОРЗИНЫ ==========
+  // ========== БЕЙДЖ ==========
   function updateBadge() {
     const badge = document.querySelector('.cart-badge');
     if (!badge) return;
-
     const count = getCartCount();
     badge.textContent = count;
-
     if (count > 0) {
       badge.classList.remove('cart-badge--hidden');
     } else {
       badge.classList.add('cart-badge--hidden');
     }
-
-    // Анимация "прыжок"
-    badge.style.transform = 'scale(1.4)';
-    setTimeout(() => {
-      badge.style.transform = 'scale(1)';
-    }, 200);
-  }
-
-  // ========== КНОПКА-СЧЁТЧИК ==========
-  function renderCartButton(productId, container) {
-    if (!container) return;
-    
-    const cart = getCart();
-    const item = cart.find(i => i.id === productId);
-    const qty = item ? item.qty : 0;
-
-    // Ищем существующую кнопку
-    let btn = container.querySelector('.add-to-cart, .qty-control');
-    if (!btn) {
-      // Если кнопки нет — выходим
-      return;
-    }
-
-    // Если товара нет в корзине — показываем "В корзину"
-    if (qty === 0) {
-      btn.className = 'btn btn-primary btn-sm add-to-cart';
-      btn.textContent = 'В корзину';
-      btn.dataset.id = productId;
-      btn._handler = () => addToCart(productId, 1);
-      btn.removeEventListener('click', btn._oldHandler);
-      btn.addEventListener('click', btn._handler);
-      btn._oldHandler = btn._handler;
-      return;
-    }
-
-    // Если товар в корзине есть — показываем счётчик
-    btn.className = 'btn btn-outline btn-sm qty-control';
-    btn.innerHTML = `
-      <button class="qty-btn qty-minus" data-id="${productId}">−</button>
-      <span class="qty-value">${qty}</span>
-      <button class="qty-btn qty-plus" data-id="${productId}">+</button>
-    `;
-
-    // Назначаем обработчики
-    const minus = btn.querySelector('.qty-minus');
-    const plus = btn.querySelector('.qty-plus');
-
-    minus.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const id = this.dataset.id;
-      const item = getCart().find(i => i.id === id);
-      if (item && item.qty > 1) {
-        updateQty(id, item.qty - 1);
-      } else {
-        removeFromCart(id);
-      }
-      // Перерисовываем кнопку
-      renderCartButton(id, container);
-      updateBadge();
-    });
-
-    plus.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const id = this.dataset.id;
-      addToCart(id, 1);
-      renderCartButton(id, container);
-      updateBadge();
-    });
   }
 
   // ========== РЕНДЕР КАРТОЧКИ ==========
@@ -359,14 +268,10 @@
 
   function bindAddToCartButtons(container) {
     if (!container) return;
-    
-    // Сначала рендерим все кнопки как счётчики
-    container.querySelectorAll('.product-card').forEach(card => {
-      const id = card.dataset.id;
-      const btn = card.querySelector('.add-to-cart, .qty-control');
-      if (btn) {
-        renderCartButton(id, card);
-      }
+    container.querySelectorAll('.add-to-cart').forEach(btn => {
+      btn.removeEventListener('click', btn._handler);
+      btn._handler = () => addToCart(btn.dataset.id, 1);
+      btn.addEventListener('click', btn._handler);
     });
   }
 
@@ -407,27 +312,20 @@
     formatPrice,
     renderProductCard,
     bindAddToCartButtons,
-    renderCartButton,
     updateBadge,
     showToast,
     getQueryParam,
     PROMO_KEY: CONFIG.PROMO_KEY
   };
 
-  // Инициализация бейджа при загрузке
+  // Инициализация
   document.addEventListener('DOMContentLoaded', function() {
     updateBadge();
   });
 
-  // Обновление бейджа при изменении корзины
   window.addEventListener('cart:updated', function() {
     updateBadge();
-    // Обновляем все кнопки на странице
-    document.querySelectorAll('.product-card').forEach(card => {
-      const id = card.dataset.id;
-      renderCartButton(id, card);
-    });
   });
 
-  console.log('✅ SeaChips модуль загружен (с бейджем и счётчиком)');
+  console.log('✅ SeaChips модуль загружен');
 })();
