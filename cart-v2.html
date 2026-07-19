@@ -355,14 +355,14 @@
 
 <header class="site-header">
   <div class="container header-inner">
-    <a href="home.html" class="logo">
+    <a href="/" class="logo">
       <span class="logo-mark">🌊</span>
       Sea Chips
     </a>
     <nav class="nav-desktop">
-      <a href="home.html">Главная</a>
-      <a href="catalog.html">Каталог</a>
-      <a href="product.html?id=beet-basil">Продукт</a>
+      <a href="/">Главная</a>
+      <a href="/catalog.html">Каталог</a>
+      <a href="/product.html?id=beet-basil">Продукт</a>
     </nav>
     <div class="header-actions">
       <a href="cart-v2.html" class="icon-btn" aria-label="Корзина">
@@ -380,8 +380,8 @@
   <button class="icon-btn mobile-nav-close" aria-label="Закрыть">
     <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
   </button>
-  <a href="home.html">Главная</a>
-  <a href="catalog.html">Каталог</a>
+  <a href="/">Главная</a>
+  <a href="/catalog.html">Каталог</a>
   <a href="cart-v2.html">Корзина</a>
 </nav>
 
@@ -391,7 +391,7 @@
   <div id="cart-empty" class="empty-cart" style="display:none;">
     <h2>Корзина пуста</h2>
     <p style="color:var(--muted);margin-bottom:24px;">Добавьте чипсы из морской капусты — хруст ждёт</p>
-    <a href="catalog.html" class="btn btn-primary">Перейти в каталог</a>
+    <a href="/catalog.html" class="btn btn-primary">Перейти в каталог</a>
   </div>
 
   <div class="cart-v2-layout" id="cart-content" style="display:none;">
@@ -430,8 +430,8 @@
         <h3 class="summary-sticky__title">Итого</h3>
         <div id="summary-rows"></div>
         <div class="summary-savings-badge" id="savings-badge"></div>
-        <a href="checkout-v2.html" class="btn btn-primary btn-block" id="checkout-btn" style="margin-top:20px;">Оформить заказ</a>
-        <a href="catalog.html" style="display:block;text-align:center;margin-top:14px;font-size:0.875rem;color:var(--muted);">← Продолжить покупки</a>
+        <a href="/checkout-v2.html" class="btn btn-primary btn-block" id="checkout-btn" style="margin-top:20px;">Оформить заказ</a>
+        <a href="/catalog.html" style="display:block;text-align:center;margin-top:14px;font-size:0.875rem;color:var(--muted);">← Продолжить покупки</a>
       </div>
     </aside>
   </div>
@@ -443,7 +443,7 @@
     <span class="mobile-checkout-bar__label">К оплате</span>
     <span class="mobile-checkout-bar__total" id="mobile-total">0 ₽</span>
   </div>
-  <a href="checkout-v2.html" class="btn btn-primary" id="mobile-checkout-btn">Оформить</a>
+  <a href="/checkout-v2.html" class="btn btn-primary" id="mobile-checkout-btn">Оформить</a>
 </div>
 
 <script src="js/sea-chips.js"></script>
@@ -506,7 +506,7 @@
         container.insertAdjacentHTML('beforeend',
   '<article class="cart-v2-item" data-id="' + item.id + '">' +
     '<div class="cart-v2-item__photo">' +
-      '<a href="product.html?id=' + p.id + '">' +
+      '<a href="/product.html?id=' + p.id + '">' +
         '<img src="' + (p.image || '/images/placeholder.jpg') + '" ' +
              'alt="' + (p.name || 'Товар') + '" ' +
              'style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);aspect-ratio:1;" ' +
