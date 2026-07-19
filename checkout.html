@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Оформление заказа — Sea Chips</title>
+  <link rel="stylesheet" href="css/sea-chips.css" />
+  <style>
+    .checkout-page { padding: 32px 0 48px; }
+    .checkout-page h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .checkout-layout {
+      display: grid;
+      gap: 32px;
+    }
+    .checkout-form-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .checkout-form-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .form-row {
+      display: grid;
+      gap: 16px;
+    }
+    @media (min-width: 600px) {
+      .form-row-2 { grid-template-columns: 1fr 1fr; }
+    }
+    .time-slots {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .time-slot {
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      text-align: center;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .time-slot.active {
+      border-color: var(--sea);
+      background: var(--sea-light);
+      color: var(--sea-dark);
+    }
+    .payment-methods {
+      display: grid;
+      gap: 12px;
+    }
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+    .payment-method:has(input:checked) {
+      border-color: var(--sea);
+      background: var(--sea-light);
+    }
+    .payment-method input { accent-color: var(--sea); width: 18px; height: 18px; }
+    .success-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: oklch(100% 0 0 / 0.95);
+      display: none;
+      place-items: center;
+      padding: 24px;
+    }
+    .success-overlay.show { display: grid; }
+    .success-card {
+      text-align: center;
+      max-width: 420px;
+    }
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--sea-light);
+      color: var(--sea);
+      font-size: 2rem;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 20px;
+    }
+    @media (min-width: 900px) {
+      .checkout-layout { grid-template-columns: 1fr 360px; align-items: start; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="home.html" class="logo">
+      <span class="logo-mark">🌊</span>
+      Sea Chips
+    </a>
+    <nav class="nav-desktop">
+      <a href="home.html">Главная</a>
+      <a href="catalog.html">Каталог</a>
+      <a href="cart.html">Корзина</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart.html" class="icon-btn" aria-label="Корзина">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 9H7.5L6 6z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M6 6L5 3H2"/></svg>
+        <span class="cart-badge">0</span>
+      </a>
+      <button class="icon-btn menu-toggle" aria-label="Меню">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" aria-label="Мобильное меню">
+  <button class="icon-btn mobile-nav-close" aria-label="Закрыть">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <a href="home.html">Главная</a>
+  <a href="catalog.html">Каталог</a>
+  <a href="cart.html">Корзина</a>
+</nav>
+
+<main class="container checkout-page">
+  <h1>Оформление заказа</h1>
+  <p style="color:var(--muted);margin-bottom:24px;">Осталось несколько шагов до хрустающего суперфуда</p>
+
+  <div class="checkout-steps">
+    <div class="checkout-step done">Корзина</div>
+    <div class="checkout-step active">Доставка</div>
+    <div class="checkout-step">Оплата</div>
+  </div>
+
+  <div id="checkout-empty" style="display:none;text-align:center;padding:48px;">
+    <p style="margin-bottom:16px;">Корзина пуста — добавьте товары для оформления</p>
+    <a href="catalog.html" class="btn btn-primary">В каталог</a>
+  </div>
+
+  <form class="checkout-layout" id="checkout-form">
+    <div>
+      <!-- Адрес -->
+      <section class="checkout-form-section">
+        <h2>Адрес доставки</h2>
+        <div class="form-group">
+          <label class="form-label" for="city">Город</label>
+          <input type="text" class="form-input" id="city" value="Москва" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="address">Улица, дом, квартира</label>
+          <input type="text" class="form-input" id="address" placeholder="ул. Примерная, д. 12, кв. 45" required />
+        </div>
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="entrance">Подъезд</label>
+            <input type="text" class="form-input" id="entrance" placeholder="2" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="floor">Этаж</label>
+            <input type="text" class="form-input" id="floor" placeholder="5" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="comment">Комментарий курьеру</label>
+          <textarea class="form-textarea" id="comment" rows="2" placeholder="Домофон не работает, позвоните"></textarea>
+        </div>
+      </section>
+
+      <!-- Контакты -->
+      <section class="checkout-form-section">
+        <h2>Контактные данные</h2>
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="name">Имя</label>
+            <input type="text" class="form-input" id="name" placeholder="Анна" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Телефон</label>
+            <input type="tel" class="form-input" id="phone" placeholder="+7 (999) 123-45-67" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">Email для чека</label>
+          <input type="email" class="form-input" id="email" placeholder="anna@email.ru" required />
+        </div>
+      </section>
+
+      <!-- Время -->
+      <section class="checkout-form-section">
+        <h2>Время доставки</h2>
+        <div class="time-slots" id="time-slots">
+          <button type="button" class="time-slot active" data-slot="10-14">10:00 – 14:00</button>
+          <button type="button" class="time-slot" data-slot="14-18">14:00 – 18:00</button>
+          <button type="button" class="time-slot" data-slot="18-22">18:00 – 22:00</button>
+          <button type="button" class="time-slot" data-slot="express">Экспресс 2–4 ч</button>
+        </div>
+      </section>
+
+      <!-- Оплата -->
+      <section class="checkout-form-section">
+        <h2>Способ оплаты</h2>
+        <div class="payment-methods">
+          <label class="payment-method">
+            <input type="radio" name="payment" value="card" checked />
+            <span>Банковская карта онлайн</span>
+          </label>
+          <label class="payment-method">
+            <input type="radio" name="payment" value="sbp" />
+            <span>СБП (Система быстрых платежей)</span>
+          </label>
+          <label class="payment-method">
+            <input type="radio" name="payment" value="cod" />
+            <span>Картой или наличными курьеру</span>
+          </label>
+        </div>
+        <div id="card-fields" style="margin-top:20px;">
+          <div class="form-group">
+            <label class="form-label" for="card-number">Номер карты</label>
+            <input type="text" class="form-input" id="card-number" placeholder="0000 0000 0000 0000" maxlength="19" />
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="card-exp">Срок</label>
+              <input type="text" class="form-input" id="card-exp" placeholder="MM/YY" maxlength="5" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="card-cvc">CVC</label>
+              <input type="text" class="form-input" id="card-cvc" placeholder="•••" maxlength="3" />
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside>
+      <div class="order-summary">
+        <h3 style="font-family:var(--font-display);font-size:1.125rem;margin-bottom:16px;">Ваш заказ</h3>
+        <div id="checkout-items" style="margin-bottom:16px;font-size:0.9375rem;"></div>
+        <div class="order-summary-row">
+          <span>Товары</span>
+          <span id="checkout-subtotal">0 ₽</span>
+        </div>
+        <div class="order-summary-row">
+          <span>Доставка</span>
+          <span id="checkout-delivery">299 ₽</span>
+        </div>
+        <div class="order-summary-row total">
+          <span>К оплате</span>
+          <span id="checkout-total">0 ₽</span>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:20px;">Оплатить заказ</button>
+        <p style="font-size:0.75rem;color:var(--muted);text-align:center;margin-top:12px;">Нажимая кнопку, вы соглашаетесь с условиями оферты</p>
+      </div>
+    </aside>
+  </form>
+</main>
+
+<div class="success-overlay" id="success-overlay">
+  <div class="success-card">
+    <div class="success-icon">✓</div>
+    <h2 style="font-family:var(--font-display);font-size:1.5rem;margin-bottom:8px;">Заказ оформлен!</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">Мы отправим SMS с номером заказа. Доставка завтра, 10:00–14:00.</p>
+    <a href="home.html" class="btn btn-primary">На главную</a>
+  </div>
+</div>
+
+<script src="js/sea-chips.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var cart = SeaChips.getCart();
+    var form = document.getElementById('checkout-form');
+    var empty = document.getElementById('checkout-empty');
+
+    if (!cart.length) {
+      form.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+
+    var subtotal = SeaChips.getCartTotal();
+    var delivery = subtotal >= 1500 ? 0 : 299;
+    var total = subtotal + delivery;
+
+    var itemsHtml = '';
+    cart.forEach(function (item) {
+      var p = SeaChips.getProductById(item.id);
+      if (p) itemsHtml += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span>' + p.name + ' × ' + item.qty + '</span><span>' + SeaChips.formatPrice(p.price * item.qty) + '</span></div>';
+    });
+    document.getElementById('checkout-items').innerHTML = itemsHtml;
+    document.getElementById('checkout-subtotal').textContent = SeaChips.formatPrice(subtotal);
+    document.getElementById('checkout-delivery').textContent = delivery ? SeaChips.formatPrice(delivery) : 'Бесплатно';
+    document.getElementById('checkout-total').textContent = SeaChips.formatPrice(total);
+
+    /* Time slots */
+    document.querySelectorAll('.time-slot').forEach(function (slot) {
+      slot.addEventListener('click', function () {
+        document.querySelectorAll('.time-slot').forEach(function (s) { s.classList.remove('active'); });
+        slot.classList.add('active');
+      });
+    });
+
+    /* Payment toggle card fields */
+    document.querySelectorAll('input[name="payment"]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        document.getElementById('card-fields').style.display = radio.value === 'card' ? 'block' : 'none';
+      });
+    });
+
+    /* Phone mask lite */
+    document.getElementById('phone').addEventListener('input', function (e) {
+      var v = e.target.value.replace(/\D/g, '');
+      if (v.startsWith('8')) v = '7' + v.slice(1);
+      if (!v.startsWith('7') && v.length) v = '7' + v;
+      var formatted = '+7';
+      if (v.length > 1) formatted += ' (' + v.slice(1, 4);
+      if (v.length >= 4) formatted += ') ' + v.slice(4, 7);
+      if (v.length >= 7) formatted += '-' + v.slice(7, 9);
+      if (v.length >= 9) formatted += '-' + v.slice(9, 11);
+      e.target.value = formatted;
+    });
+
+    /* Validation + submit */
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var valid = true;
+      ['address', 'name', 'phone', 'email'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el.value.trim()) {
+          el.classList.add('error');
+          valid = false;
+        } else {
+          el.classList.remove('error');
+        }
+      });
+
+      var payment = document.querySelector('input[name="payment"]:checked').value;
+      if (payment === 'card') {
+        var card = document.getElementById('card-number');
+        if (card.value.replace(/\s/g, '').length < 16) {
+          card.classList.add('error');
+          valid = false;
+        }
+      }
+
+      if (!valid) {
+        SeaChips.showToast('Заполните обязательные поля');
+        return;
+      }
+
+      SeaChips.clearCart();
+      document.getElementById('success-overlay').classList.add('show');
+    });
+  });
+</script>
+</body>
+</html>
