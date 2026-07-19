@@ -849,3 +849,94 @@
 }
 
 .pickup-note.is-hidden { display: none; }
+
+/* ================================================================
+   🛒 БЕЙДЖ КОРЗИНЫ (КРАСНЫЙ С БЕЛОЙ ЦИФРОЙ)
+   ================================================================ */
+.header-actions .icon-btn {
+  position: relative;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background: #dc2626;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+  transition: transform 0.2s ease;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.cart-badge--hidden {
+  transform: scale(0);
+}
+
+/* ================================================================
+   🛒 КНОПКА-СЧЁТЧИК В КАТАЛОГЕ
+   ================================================================ */
+.qty-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--sea-light);
+  border: 1.5px solid var(--sea);
+  border-radius: 40px;
+  padding: 4px 6px;
+  font-size: 0.9rem;
+}
+
+.qty-control .qty-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--sea);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.qty-control .qty-btn:hover {
+  background: var(--sea-dark);
+  transform: scale(1.05);
+}
+
+.qty-control .qty-btn:active {
+  transform: scale(0.9);
+}
+
+.qty-control .qty-value {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--sea-dark);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--sea);
+  color: var(--sea);
+}
+
+.btn-outline:hover {
+  background: var(--sea);
+  color: white;
+}
