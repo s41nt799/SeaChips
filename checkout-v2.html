@@ -36,10 +36,7 @@
       max-width: 500px;
       margin: 0 auto;
     }
-    .avito-card__icon {
-      font-size: 4rem;
-      margin-bottom: 16px;
-    }
+    .avito-card__icon { font-size: 4rem; margin-bottom: 16px; }
     .avito-card__title {
       font-family: var(--font-display);
       font-size: 1.5rem;
@@ -78,17 +75,15 @@
     .btn-avito {
       background: #00bfff;
       color: white;
-      box-shadow: 0 4px 14px rgba(0, 191, 255, 0.35);
+      box-shadow: 0 4px 14px rgba(0,191,255,0.35);
       transition: all 0.25s ease;
     }
     .btn-avito:hover {
       background: #0099cc;
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 191, 255, 0.45);
+      box-shadow: 0 6px 20px rgba(0,191,255,0.45);
     }
-    .btn-avito .icon {
-      font-size: 1.2rem;
-    }
+    .btn-avito .icon { font-size: 1.2rem; }
     
     .order-summary-compact {
       background: var(--surface);
@@ -118,10 +113,7 @@
       text-align: center;
       margin-top: 16px;
     }
-    .avito-note a {
-      color: var(--sea);
-      text-decoration: underline;
-    }
+    .avito-note a { color: var(--sea); text-decoration: underline; }
     
     .cart-badge {
       background: var(--sea);
@@ -145,16 +137,74 @@
       .avito-card__title { font-size: 1.25rem; }
       .avito-card__order .number { font-size: 1.25rem; }
     }
+
+    /* ===== SUCCESS MODAL ===== */
+    .success-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .success-modal.show { display: flex; }
+    .success-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      animation: fadeIn 0.3s ease;
+    }
+    .success-modal__content {
+      position: relative;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 48px 40px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .success-modal__icon { font-size: 4rem; margin-bottom: 16px; }
+    .success-modal__title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--fg);
+    }
+    .success-modal__text {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .success-modal__actions { display: flex; flex-direction: column; gap: 12px; }
+    .success-modal__actions .btn { width: 100%; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @media (max-width: 480px) {
+      .success-modal__content { padding: 32px 24px; margin: 16px; }
+      .success-modal__icon { font-size: 3rem; }
+      .success-modal__title { font-size: 1.25rem; }
+    }
   </style>
 </head>
 <body class="page-with-mobile-bar">
 
 <header class="site-header">
   <div class="container header-inner">
-    <a href="/" class="logo">
-      <span class="logo-mark">🌊</span>
-      Sea Chips
-    </a>
+    <a href="/" class="logo"><span class="logo-mark">🌊</span> Sea Chips</a>
     <nav class="nav-desktop">
       <a href="/">Главная</a>
       <a href="/catalog.html">Каталог</a>
@@ -191,12 +241,10 @@
   </div>
 
   <div id="checkout-main" style="display:none;">
-    <div style="max-width: 600px; margin: 0 auto;">
-      <!-- Форма контактов -->
+    <div style="max-width:600px;margin:0 auto;">
       <form id="checkout-form" novalidate>
         <div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:24px;margin-bottom:24px;">
           <h2 style="font-family:var(--font-display);font-size:1.125rem;font-weight:600;margin-bottom:20px;">Контактные данные</h2>
-          
           <div class="form-group">
             <label class="form-label" for="name">Имя *</label>
             <input type="text" class="form-input" id="name" placeholder="Анна" required autocomplete="name" />
@@ -213,14 +261,10 @@
           </div>
         </div>
 
-        <!-- АВИТО КАРТОЧКА -->
         <div class="avito-card">
           <div class="avito-card__icon">🛒</div>
           <h2 class="avito-card__title">Готово к оплате</h2>
-          <p class="avito-card__sub">
-            После подтверждения заказа вы перейдёте на Авито для оплаты и выбора способа доставки.
-          </p>
-
+          <p class="avito-card__sub">После подтверждения заказа вы перейдёте на Авито для оплаты и выбора способа доставки.</p>
           <div class="avito-card__order">
             <div class="label">Ваш заказ</div>
             <div class="number" id="avito-order-number">—</div>
@@ -229,11 +273,9 @@
               <div class="total" id="avito-total">0 ₽</div>
             </div>
           </div>
-
           <button type="submit" class="btn btn-avito btn-block" id="avito-submit-btn">
             <span class="icon">🛍️</span> Перейти к оплате на Авито
           </button>
-
           <div class="avito-note">
             Вы будете перенаправлены на сайт Авито для безопасной оплаты.
             <br>
@@ -241,7 +283,6 @@
           </div>
         </div>
 
-        <!-- Краткое итого -->
         <div class="order-summary-compact" id="order-summary-compact">
           <div class="row"><span>Товары</span><span id="summary-subtotal">0 ₽</span></div>
           <div class="row"><span>Доставка</span><span id="summary-delivery">Бесплатно</span></div>
@@ -256,13 +297,19 @@
   </div>
 </main>
 
-<!-- Success overlay -->
-<div class="success-overlay-v2" id="success-overlay">
-  <div class="success-card-v2">
-    <div class="success-card-v2__icon">✓</div>
-    <h2>Заказ оформлен!</h2>
-    <p id="success-message">Мы отправим SMS с номером заказа. Спасибо, что выбрали Sea Chips!</p>
-    <a href="/" class="btn btn-primary">На главную</a>
+<!-- ===== SUCCESS MODAL ===== -->
+<div class="success-modal" id="success-overlay">
+  <div class="success-modal__backdrop" id="modal-backdrop"></div>
+  <div class="success-modal__content">
+    <div class="success-modal__icon">🎉</div>
+    <h2 class="success-modal__title">Заказ оформлен!</h2>
+    <p class="success-modal__text" id="success-message">Заказ #SC-123456 создан! Перейдите на Авито для оплаты.</p>
+    <div class="success-modal__actions">
+      <a href="https://www.avito.ru/ваше_объявление" target="_blank" class="btn btn-primary" style="background:#00bfff;box-shadow:0 4px 14px rgba(0,191,255,0.35);">
+        🛍️ Перейти на Авито
+      </a>
+      <a href="/" class="btn btn-secondary">На главную</a>
+    </div>
   </div>
 </div>
 
@@ -284,7 +331,6 @@
     }
     main.style.display = 'block';
     
-    // ===== АВИТО ССЫЛКА =====
     // 🔥 ЗАМЕНИ НА ССЫЛКУ НА ТВОЁ ОБЪЯВЛЕНИЕ НА АВИТО
     var AVITO_LINK = 'https://www.avito.ru/user/86b1c67467fa1188c34be9bf2f2b94dc/profile';
     
@@ -299,21 +345,27 @@
       document.getElementById('summary-subtotal').textContent = SeaChips.formatPrice(subtotal);
       document.getElementById('summary-delivery').textContent = delivery === 0 ? 'Бесплатно' : SeaChips.formatPrice(delivery);
       document.getElementById('summary-total').textContent = SeaChips.formatPrice(total);
-      
-      // Обновляем ссылку на Авито с параметрами
-      var btn = document.getElementById('avito-submit-btn');
-      var orderLink = AVITO_LINK + '?order_id=' + orderNumber + '&total=' + total;
-      btn.onclick = function(e) {
-        e.preventDefault();
-        window.open(orderLink, '_blank');
-        // Показываем успех после перехода
-        document.getElementById('success-message').textContent = 
-          document.getElementById('name').value.trim() + ', заказ #' + orderNumber + ' создан! Перейдите на Авито для оплаты.';
-        document.getElementById('success-overlay').classList.add('show');
-      };
     }
     
-    // ===== ОТПРАВКА ЗАКАЗА В SUPABASE =====
+    // ===== ПОКАЗ МОДАЛКИ =====
+    function showSuccessModal(message) {
+      document.getElementById('success-message').textContent = message;
+      var overlay = document.getElementById('success-overlay');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function hideSuccessModal() {
+      document.getElementById('success-overlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    
+    document.getElementById('modal-backdrop').addEventListener('click', hideSuccessModal);
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') hideSuccessModal();
+    });
+    
+    // ===== ОТПРАВКА ЗАКАЗА =====
     document.getElementById('checkout-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -372,12 +424,7 @@
         
         SeaChips.clearCart();
         
-        // Показываем успех
-        document.getElementById('success-message').textContent = 
-          name.value.trim() + ', заказ #' + orderNumber + ' создан! Перейдите на Авито для оплаты.';
-        document.getElementById('success-overlay').classList.add('show');
-        
-        // Открываем Авито
+        showSuccessModal(name.value.trim() + ', заказ #' + orderNumber + ' создан! Перейдите на Авито для оплаты.');
         window.open(AVITO_LINK + '?order_id=' + orderNumber + '&total=' + total, '_blank');
         
       } catch (error) {
@@ -415,13 +462,11 @@
       menuToggle.addEventListener('click', function() {
         mobileNav.classList.toggle('open');
       });
-  
       if (closeBtn) {
         closeBtn.addEventListener('click', function() {
           mobileNav.classList.remove('open');
         });
       }
-  
       document.addEventListener('click', function(e) {
         if (mobileNav.classList.contains('open') &&
             !mobileNav.contains(e.target) &&
