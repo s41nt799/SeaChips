@@ -1,4 +1,4 @@
-// sea-chips.js — стабильная версия с бейджем
+// sea-chips.js — максимально ускоренная версия с кешем на 1 час
 (function() {
   'use strict';
 
@@ -6,7 +6,7 @@
     STORE_KEY: 'seachips:cart',
     CACHE_KEY: 'seachips:products',
     CACHE_TIME_KEY: 'seachips:products_time',
-    CACHE_TTL: 3600000,
+    CACHE_TTL: 3600000, // 1 час
     SUPABASE_URL: 'https://yaukapdyrbefzrifqifa.supabase.co',
     SUPABASE_KEY: 'sb_publishable_KbCQKRekMG883j7KYPz9EQ_Wei3_HeH',
     PROMO_KEY: 'SEACHIPS10'
@@ -29,7 +29,7 @@
     }
   }
 
-  // ========== ЗАГРУЗКА ТОВАРОВ ==========
+  // ========== ЗАГРУЗКА ТОВАРОВ С КЕШИРОВАНИЕМ ==========
   function loadProductsFromSupabase(force = false) {
     if (loadPromise) return loadPromise;
 
@@ -168,6 +168,12 @@
 
     saveCart(cart);
     showToast(`${product.name} +${quantity} в корзине`);
+    
+    // Обновляем все кнопки на странице
+    document.querySelectorAll('.product-card').forEach(card => {
+      const id = card.dataset.id;
+      renderCartButton(id, card);
+    });
   }
 
   function updateQty(productId, quantity) {
@@ -186,6 +192,9 @@
   function removeFromCart(productId) {
     const cart = getCart().filter(item => item.id !== productId);
     saveCart(cart);
+    document.querySelectorAll(`.product-card[data-id="${productId}"]`).forEach(card => {
+      renderCartButton(productId, card);
+    });
   }
 
   function clearCart() {
@@ -212,7 +221,7 @@
     return price.toLocaleString('ru-RU') + ' ₽';
   }
 
-  // ========== БЕЙДЖ ==========
+  // ========== БЕЙДЖ КОРЗИНЫ ==========
   function updateBadge() {
     const badge = document.querySelector('.cart-badge');
     if (!badge) return;
@@ -223,6 +232,60 @@
     } else {
       badge.classList.add('cart-badge--hidden');
     }
+  }
+
+  // ========== КНОПКА-СЧЁТЧИК ==========
+  function renderCartButton(productId, container) {
+    if (!container) return;
+    
+    const cart = getCart();
+    const item = cart.find(i => i.id === productId);
+    const qty = item ? item.qty : 0;
+
+    let btn = container.querySelector('.add-to-cart, .qty-control');
+    if (!btn) return;
+
+    if (qty === 0) {
+      btn.className = 'btn btn-primary btn-sm add-to-cart';
+      btn.textContent = 'В корзину';
+      btn.dataset.id = productId;
+      btn._handler = () => addToCart(productId, 1);
+      btn.removeEventListener('click', btn._oldHandler);
+      btn.addEventListener('click', btn._handler);
+      btn._oldHandler = btn._handler;
+      return;
+    }
+
+    btn.className = 'btn btn-outline btn-sm qty-control';
+    btn.innerHTML = `
+      <button class="qty-btn qty-minus" data-id="${productId}">−</button>
+      <span class="qty-value">${qty}</span>
+      <button class="qty-btn qty-plus" data-id="${productId}">+</button>
+    `;
+
+    const minus = btn.querySelector('.qty-minus');
+    const plus = btn.querySelector('.qty-plus');
+
+    minus.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const id = this.dataset.id;
+      const item = getCart().find(i => i.id === id);
+      if (item && item.qty > 1) {
+        updateQty(id, item.qty - 1);
+      } else {
+        removeFromCart(id);
+      }
+      renderCartButton(id, container);
+      updateBadge();
+    });
+
+    plus.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const id = this.dataset.id;
+      addToCart(id, 1);
+      renderCartButton(id, container);
+      updateBadge();
+    });
   }
 
   // ========== РЕНДЕР КАРТОЧКИ ==========
@@ -268,20 +331,21 @@
 
   function bindAddToCartButtons(container) {
     if (!container) return;
-    container.querySelectorAll('.add-to-cart').forEach(btn => {
-      btn.removeEventListener('click', btn._handler);
-      btn._handler = () => addToCart(btn.dataset.id, 1);
-      btn.addEventListener('click', btn._handler);
+    container.querySelectorAll('.product-card').forEach(card => {
+      const id = card.dataset.id;
+      const btn = card.querySelector('.add-to-cart, .qty-control');
+      if (btn) {
+        renderCartButton(id, card);
+      }
     });
   }
 
-  // ========== TOAST ==========
   function showToast(message, duration = 3000) {
     let toast = document.querySelector('.toast');
     if (!toast) {
       toast = document.createElement('div');
       toast.className = 'toast';
-      toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e2a2e;color:white;padding:12px 24px;border-radius:999px;font-size:14px;z-index:1000;opacity:0;transition:opacity 0.2s;pointer-events:none;font-family:sans-serif;';
+      toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e2a2e;color:white;padding:12px 24px;border-radius:999px;font-size:14px;z-index:1000;opacity:0;transition:opacity 0.2s;pointer-events:none;';
       document.body.appendChild(toast);
     }
     toast.textContent = message;
@@ -291,8 +355,7 @@
   }
 
   function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
+    return new URLSearchParams(window.location.search).get(param);
   }
 
   // ========== ПУБЛИЧНОЕ API ==========
@@ -312,20 +375,25 @@
     formatPrice,
     renderProductCard,
     bindAddToCartButtons,
+    renderCartButton,
     updateBadge,
     showToast,
     getQueryParam,
     PROMO_KEY: CONFIG.PROMO_KEY
   };
 
-  // Инициализация
+  // Инициализация при загрузке
   document.addEventListener('DOMContentLoaded', function() {
     updateBadge();
   });
 
   window.addEventListener('cart:updated', function() {
     updateBadge();
+    document.querySelectorAll('.product-card').forEach(card => {
+      const id = card.dataset.id;
+      renderCartButton(id, card);
+    });
   });
 
-  console.log('✅ SeaChips модуль загружен');
+  console.log('✅ SeaChips модуль загружен (с бейджем и счётчиком)');
 })();

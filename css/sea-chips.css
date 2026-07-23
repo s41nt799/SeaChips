@@ -2,7 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap');
 
 :root {
-  /* Marine superfood palette — OKLch */
   --bg:           oklch(98% 0.008 165);
   --surface:      oklch(100% 0 0);
   --surface-warm: oklch(96% 0.018 85);
@@ -60,7 +59,7 @@ button { cursor: pointer; border: none; background: none; }
   margin-inline: auto;
 }
 
-/* ——— Header ——— */
+/* ===== HEADER ===== */
 .site-header {
   position: sticky;
   top: 0;
@@ -135,30 +134,6 @@ button { cursor: pointer; border: none; background: none; }
 
 .icon-btn:hover { background: var(--sea-light); }
 
-.cart-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: var(--beet);
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  transform: scale(0.6);
-  transition: all 0.25s var(--ease);
-}
-
-.cart-badge.visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
 .menu-toggle { display: grid; }
 
 .mobile-nav {
@@ -198,7 +173,7 @@ button { cursor: pointer; border: none; background: none; }
   .menu-toggle { display: none; }
 }
 
-/* ——— Buttons ——— */
+/* ===== BUTTONS ===== */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -251,7 +226,18 @@ button { cursor: pointer; border: none; background: none; }
 
 .btn-block { width: 100%; }
 
-/* ——— Product photo placeholder ——— */
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--sea);
+  color: var(--sea);
+}
+
+.btn-outline:hover {
+  background: var(--sea);
+  color: white;
+}
+
+/* ===== PRODUCT PHOTO ===== */
 .product-photo {
   position: relative;
   overflow: hidden;
@@ -290,7 +276,7 @@ button { cursor: pointer; border: none; background: none; }
   text-align: center;
 }
 
-/* ——— Cards ——— */
+/* ===== PRODUCT CARD ===== */
 .product-card {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -353,7 +339,7 @@ button { cursor: pointer; border: none; background: none; }
   padding-top: 8px;
 }
 
-/* ——— Badges ——— */
+/* ===== BADGES ===== */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -367,7 +353,7 @@ button { cursor: pointer; border: none; background: none; }
 .badge-vegan { background: var(--sea-light); color: var(--sea-dark); }
 .badge-hit { background: var(--beet-light); color: var(--beet); }
 
-/* ——— Section ——— */
+/* ===== SECTIONS ===== */
 .section {
   padding: 48px 0;
 }
@@ -393,7 +379,7 @@ button { cursor: pointer; border: none; background: none; }
   line-height: 1.2;
 }
 
-/* ——— Grid ——— */
+/* ===== GRIDS ===== */
 .grid-2 { display: grid; gap: 16px; }
 .grid-3 { display: grid; gap: 20px; }
 .grid-4 { display: grid; gap: 20px; }
@@ -409,7 +395,7 @@ button { cursor: pointer; border: none; background: none; }
   .grid-4 { grid-template-columns: repeat(4, 1fr); }
 }
 
-/* ——— Feature row ——— */
+/* ===== FEATURES ===== */
 .feature-row {
   display: grid;
   gap: 16px;
@@ -451,7 +437,7 @@ button { cursor: pointer; border: none; background: none; }
   .feature-row { grid-template-columns: repeat(4, 1fr); }
 }
 
-/* ——— Footer ——— */
+/* ===== FOOTER ===== */
 .site-footer {
   background: var(--sea-dark);
   color: oklch(92% 0.02 165);
@@ -492,7 +478,7 @@ button { cursor: pointer; border: none; background: none; }
   .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
 }
 
-/* ——— Form controls ——— */
+/* ===== FORMS ===== */
 .form-group { margin-bottom: 20px; }
 
 .form-label {
@@ -536,7 +522,7 @@ button { cursor: pointer; border: none; background: none; }
   margin-top: 4px;
 }
 
-/* ——— Qty stepper ——— */
+/* ===== QTY STEPPER ===== */
 .qty-stepper {
   display: inline-flex;
   align-items: center;
@@ -562,7 +548,7 @@ button { cursor: pointer; border: none; background: none; }
   font-variant-numeric: tabular-nums;
 }
 
-/* ——— Toast ——— */
+/* ===== TOAST ===== */
 .toast {
   position: fixed;
   bottom: 24px;
@@ -585,7 +571,7 @@ button { cursor: pointer; border: none; background: none; }
   opacity: 1;
 }
 
-/* ——— Animations ——— */
+/* ===== ANIMATIONS ===== */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -599,7 +585,7 @@ button { cursor: pointer; border: none; background: none; }
 .animate-in-delay-2 { animation-delay: 0.2s; }
 .animate-in-delay-3 { animation-delay: 0.3s; }
 
-/* ——— Sticky buy bar (mobile product) ——— */
+/* ===== STICKY BUY BAR ===== */
 .sticky-buy-bar {
   position: fixed;
   bottom: 0;
@@ -623,7 +609,7 @@ button { cursor: pointer; border: none; background: none; }
   .sticky-buy-bar { display: none; }
 }
 
-/* ——— Filter panel ——— */
+/* ===== FILTERS ===== */
 .filter-panel {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -723,7 +709,7 @@ button { cursor: pointer; border: none; background: none; }
   .filter-drawer { display: none; }
 }
 
-/* ——— Order summary ——— */
+/* ===== ORDER SUMMARY ===== */
 .order-summary {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -747,7 +733,7 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 1.125rem;
 }
 
-/* ——— Review card ——— */
+/* ===== REVIEW CARD ===== */
 .review-card {
   padding: 24px;
   background: var(--surface);
@@ -759,7 +745,7 @@ button { cursor: pointer; border: none; background: none; }
 .review-text { font-size: 0.9375rem; color: var(--muted); margin-bottom: 12px; }
 .review-author { font-weight: 600; font-size: 0.875rem; }
 
-/* ——— Steps indicator ——— */
+/* ===== CHECKOUT STEPS ===== */
 .checkout-steps {
   display: flex;
   gap: 8px;
@@ -789,4 +775,84 @@ button { cursor: pointer; border: none; background: none; }
 
 @media (min-width: 600px) {
   .checkout-step { font-size: 0.875rem; }
+}
+
+/* ================================================================
+   🛒 БЕЙДЖ КОРЗИНЫ (КРАСНЫЙ С БЕЛОЙ ЦИФРОЙ)
+   ================================================================ */
+.header-actions .icon-btn {
+  position: relative;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background: #dc2626;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+  transition: transform 0.2s ease;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.cart-badge--hidden {
+  transform: scale(0);
+}
+
+/* ================================================================
+   🛒 КНОПКА-СЧЁТЧИК В КАТАЛОГЕ
+   ================================================================ */
+.qty-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--sea-light);
+  border: 1.5px solid var(--sea);
+  border-radius: 40px;
+  padding: 4px 6px;
+  font-size: 0.9rem;
+}
+
+.qty-control .qty-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--sea);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.qty-control .qty-btn:hover {
+  background: var(--sea-dark);
+  transform: scale(1.05);
+}
+
+.qty-control .qty-btn:active {
+  transform: scale(0.9);
+}
+
+.qty-control .qty-value {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--sea-dark);
 }
