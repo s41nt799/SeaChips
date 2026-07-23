@@ -397,3 +397,19 @@
 
   console.log('✅ SeaChips модуль загружен (с бейджем и счётчиком)');
 })();
+
+// ===== ЗАЩИТА ОТ XSS =====
+function sanitize(str) {
+  if (!str) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2F;',
+  };
+  return String(str).replace(/[&<>"'/]/g, function(s) {
+    return map[s];
+  });
+}

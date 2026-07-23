@@ -182,6 +182,34 @@
       ' · ' + provider +
       (order.payment.paymentId ? ' · ID ' + order.payment.paymentId : '');
   });
+
+  // ===== МОБИЛЬНОЕ МЕНЮ =====
+document.addEventListener('DOMContentLoaded', function() {
+  const menuToggle = document.querySelector('.menu-toggle');
+  const mobileNav = document.querySelector('.mobile-nav');
+  const closeBtn = document.querySelector('.mobile-nav-close');
+
+  if (menuToggle && mobileNav) {
+    menuToggle.addEventListener('click', function() {
+      mobileNav.classList.toggle('open');
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        mobileNav.classList.remove('open');
+      });
+    }
+
+    // Закрытие по клику вне меню
+    document.addEventListener('click', function(e) {
+      if (mobileNav.classList.contains('open') &&
+          !mobileNav.contains(e.target) &&
+          !menuToggle.contains(e.target)) {
+        mobileNav.classList.remove('open');
+      }
+    });
+  }
+});
 </script>
 </body>
 </html>

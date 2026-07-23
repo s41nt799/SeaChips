@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sea Chips — Чипсы из морской капусты</title>
   <link rel="stylesheet" href="css/sea-chips.css" />
+
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://cdn.jsdelivr.net https://api.telegram.org;
+  style-src 'self' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data: https://yaukapdyrbefzrifqifa.supabase.co https://raw.githubusercontent.com https://i.pinimg.com;
+  connect-src 'self' https://yaukapdyrbefzrifqifa.supabase.co https://api.telegram.org;
+">
   
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -399,7 +408,7 @@
       <div>
         <h4>Связь</h4>
         <a href="mailto:hello@seachips.ru">hello@seachips.ru</a>
-        <a href="#">Telegram</a>
+        <a href="https://t.me/seachipshelper_bot">Telegram</a>
       </div>
     </div>
     <div class="footer-bottom">© 2026 Sea Chips. Все права защищены.</div>
@@ -443,6 +452,34 @@
       e.target.reset();
     });
   });
+
+  // ===== МОБИЛЬНОЕ МЕНЮ =====
+document.addEventListener('DOMContentLoaded', function() {
+  const menuToggle = document.querySelector('.menu-toggle');
+  const mobileNav = document.querySelector('.mobile-nav');
+  const closeBtn = document.querySelector('.mobile-nav-close');
+
+  if (menuToggle && mobileNav) {
+    menuToggle.addEventListener('click', function() {
+      mobileNav.classList.toggle('open');
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        mobileNav.classList.remove('open');
+      });
+    }
+
+    // Закрытие по клику вне меню
+    document.addEventListener('click', function(e) {
+      if (mobileNav.classList.contains('open') &&
+          !mobileNav.contains(e.target) &&
+          !menuToggle.contains(e.target)) {
+        mobileNav.classList.remove('open');
+      }
+    });
+  }
+});
 </script>
 </body>
 </html>

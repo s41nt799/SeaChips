@@ -937,3 +937,68 @@ button { cursor: pointer; border: none; background: none; }
   font-weight: 600;
   color: var(--sea-dark);
 }
+
+/* ===== МОБИЛЬНАЯ ВЕРСИЯ ===== */
+@media (max-width: 600px) {
+  .product-card {
+    padding: 12px;
+  }
+
+  .product-card__image {
+    margin: -12px -12px 10px -12px;
+  }
+
+  .product-card__price {
+    font-size: 1.1rem;
+    padding: 4px 14px;
+  }
+
+  .product-card__footer .btn-sm {
+    font-size: 0.8rem;
+    padding: 6px 14px;
+  }
+
+  .filter-panel {
+    display: none;
+  }
+
+  .mobile-filter-toggle {
+    display: block;
+  }
+
+  .nav-desktop {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: grid;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+  }
+
+  .hero-content {
+    max-width: 100% !important;
+  }
+
+  .hero-cta {
+    justify-content: center;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+  }
+
+  .checkout-wizard-steps {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .checkout-wizard-step {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
