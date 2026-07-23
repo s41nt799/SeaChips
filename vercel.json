@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/images/(.*)", "destination": "/images/$1" }
+    { "source": "/images/(.*)", "destination": "/images/$1" },
+    { "source": "/yandex_7d825b5ca74326af.html", "destination": "/yandex_7d825b5ca74326af.html" }
   ]
 }
