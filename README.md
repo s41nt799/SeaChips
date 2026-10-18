@@ -27,3 +27,9 @@
 1. Склонируй репозиторий:
    ```bash
    git clone https://github.com/s41nt799/SeaChips.git
+   ```
+   ИЛИ
+
+2. Просто перейди по ссылке:
+   ```
+   https://www.seachips.ru
