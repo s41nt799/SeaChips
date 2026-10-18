@@ -1,17 +1,13 @@
-// order-service.js — ФИНАЛ
 const ORDER_SERVICE = {
-  // ========== TELEGRAM НАСТРОЙКИ ==========
   telegram: {
     token: '8995817162:AAFzWvIRn-_xBxXiSYb0uQecquxaI9iRTH8',
     chatId: '8431012952'
   },
 
-  // ========== ОТПРАВКА ЗАКАЗА (МГНОВЕННО) ==========
   async submitOrder(orderData) {
     try {
-      console.log('📦 Отправка заказа...', orderData);
+      console.log('Отправка заказа...', orderData);
       
-      // 🔥 1. Сохраняем заказ (это быстро)
       const { data, error } = await window.supabaseClient
         .from('orders')
         .insert([orderData])
@@ -23,25 +19,22 @@ const ORDER_SERVICE = {
         throw new Error('Не удалось сохранить заказ: ' + error.message);
       }
       
-      console.log('✅ Заказ сохранён в Supabase:', data);
+      console.log('Заказ сохранён в Supabase:', data);
       
-      // 🔥 2. Telegram отправляем в фоне (НЕ ЖДЁМ!)
       this.sendTelegramNotification(orderData);
       
-      // 🔥 3. Возвращаем заказ сразу, не дожидаясь Telegram
       return data;
       
     } catch (error) {
-      console.error('❌ Ошибка при оформлении заказа:', error);
+      console.error('Ошибка при оформлении заказа:', error);
       throw error;
     }
   },
 
-  // ========== TELEGRAM (фоновый, без ожидания) ==========
   async sendTelegramNotification(order) {
     try {
       const message = this.formatOrderMessage(order);
-      console.log('📤 Отправка в Telegram (фон)...');
+      console.log('Отправка в Telegram (фон)...');
       
       const response = await fetch(
         'https://yaukapdyrbefzrifqifa.supabase.co/functions/v1/send-telegram',
@@ -55,16 +48,15 @@ const ORDER_SERVICE = {
       const result = await response.json();
       
       if (response.ok && result.ok) {
-        console.log('✅ Уведомление в Telegram отправлено');
+        console.log('Уведомление в Telegram отправлено');
       } else {
-        console.error('❌ Ошибка Telegram:', result);
+        console.error('Ошибка Telegram:', result);
       }
     } catch (error) {
-      console.warn('⚠️ Telegram не ответил, но заказ сохранён:', error.message);
+      console.warn('Telegram не ответил, но заказ сохранён:', error.message);
     }
   },
 
-  // ========== ФОРМАТИРОВАНИЕ ==========
   formatOrderMessage(order) {
     const itemsList = (order.items || []).map(item => 
       `  • ${item.name} × ${item.qty} = ${item.lineTotal} ₽`
@@ -90,7 +82,6 @@ ${order.delivery_slot ? `⏰ <b>Время:</b> ${order.delivery_slot}` : ''}
     `.trim();
   },
 
-  // ========== ГЕНЕРАЦИЯ НОМЕРА ==========
   generateOrderNumber() {
     const date = new Date();
     const prefix = 'SC';
@@ -103,4 +94,4 @@ ${order.delivery_slot ? `⏰ <b>Время:</b> ${order.delivery_slot}` : ''}
 };
 
 window.OrderService = ORDER_SERVICE;
-console.log('✅ OrderService загружен (Telegram в фоне)');
+console.log('OrderService загружен (Telegram в фоне)');
