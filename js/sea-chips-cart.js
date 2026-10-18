@@ -1,6 +1,3 @@
-/**
- * Sea Chips — cart v2 / checkout v2: расчёты, промокоды, доставка
- */
 (function () {
   'use strict';
 
@@ -49,7 +46,6 @@
     window.dispatchEvent(new CustomEvent('cart:delivery-changed'));
   }
 
-  /** Проверка промокода — возвращает { ok, message } */
   function validatePromoCode(code) {
     var normalized = (code || '').trim().toUpperCase();
     if (!normalized) {
@@ -72,7 +68,6 @@
     var deliveryInfo = DELIVERY_PRICES[deliveryType] || DELIVERY_PRICES.courier;
     var delivery = deliveryInfo.price;
 
-    /* Бесплатная доставка: курьер и ПВЗ от порога, экспресс всегда платный */
     if (afterDiscount >= FREE_DELIVERY_FROM && deliveryType !== 'express') {
       delivery = 0;
     }
@@ -98,7 +93,6 @@
     };
   }
 
-  /** Форматирование телефона +7 (XXX) XXX-XX-XX */
   function formatPhoneInput(value) {
     var v = value.replace(/\D/g, '');
     if (v.startsWith('8')) v = '7' + v.slice(1);
@@ -119,7 +113,6 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  /** Рендер строки итого в DOM-контейнер */
   function renderSummaryRows(container, order) {
     if (!container) return;
     container.innerHTML =
@@ -145,7 +138,6 @@
       '</div>';
   }
 
-  /** Прогресс-бар бесплатной доставки */
   function renderFreeDeliveryBar(container, order) {
     if (!container) return;
     if (!order.count) {
