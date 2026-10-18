@@ -1,6 +1,3 @@
-/**
- * Sea Chips — store layer: заказы, upsell, email capture, checkout hook
- */
 (function () {
   'use strict';
 
@@ -9,8 +6,6 @@
   var CART_EMAIL_KEY = 'seachips:cart-email';
   var CART_SNAPSHOT_KEY = 'seachips:cart-snapshot';
   var CART_SAVED_AT_KEY = 'seachips:cart-saved-at';
-
-  /* ——— Order persistence ——— */
 
   function generateOrderId() {
     var d = new Date();
@@ -53,7 +48,6 @@
     }
   }
 
-  /** Сборка заказа из checkout-формы */
   function buildOrderFromCheckout(formData) {
     var cart = window.SeaChips.getCart();
     var calc = window.SeaChipsCart.calculateOrder();
@@ -105,8 +99,6 @@
     };
   }
 
-  /* ——— Cart persistence audit ——— */
-
   function auditCart() {
     var cart = window.SeaChips.getCart();
     var repaired = [];
@@ -148,8 +140,6 @@
       repaired: removed > 0 || issues.length > 0
     };
   }
-
-  /* ——— Email capture ——— */
 
   function getSavedEmail() {
     try {
@@ -198,8 +188,6 @@
     } catch (_) {}
     return false;
   }
-
-  /* ——— Upsell recommendations ——— */
 
   function getUpsellProducts(limit) {
     limit = limit || 3;
@@ -268,8 +256,6 @@
     });
   }
 
-  /* ——— Email capture block injection ——— */
-
   function renderEmailCaptureBlock(container) {
     if (!container) return;
     var saved = getSavedEmail();
@@ -303,9 +289,7 @@
       }, 500);
     });
   }
-
-  /* ——— Checkout hook → order + payment → redirect ——— */
-
+  
   function initCheckoutHook() {
     var form = document.getElementById('checkout-form');
     if (!form || form.dataset.storeHooked) return;
@@ -324,7 +308,6 @@
 
       if (!nameEl || !phoneEl || !emailEl) return;
 
-      /* Валидация */
       var valid = true;
       [nameEl, phoneEl, emailEl].forEach(function (el) { el.classList.remove('error'); });
 
@@ -365,7 +348,6 @@
         slot: slotMap[slotKey] || slotKey
       });
 
-      /* Сохраняем email для будущих сессий */
       try {
         localStorage.setItem(CART_EMAIL_KEY, order.customer.email);
       } catch (_) {}
@@ -383,7 +365,6 @@
         order.status = 'confirmed';
 
         saveOrder(order);
-        /* Очищаем snapshot — заказ завершён */
         try {
           localStorage.removeItem(CART_SNAPSHOT_KEY);
           localStorage.removeItem(CART_SAVED_AT_KEY);
@@ -402,12 +383,10 @@
     }, true);
   }
 
-  /* ——— Cart page enhancements ——— */
 
   function initCartEnhancements() {
     if (!document.getElementById('cart-items')) return;
 
-    /* Upsell — вставляем после списка товаров */
     if (!document.getElementById('cart-upsell-wrap')) {
       var upsellWrap = document.createElement('div');
       upsellWrap.id = 'cart-upsell-wrap';
@@ -418,7 +397,6 @@
       window.addEventListener('cart:upsell-added', function () { renderUpsellBlock(upsellWrap); });
     }
 
-    /* Email capture — перед промокодом */
     if (!document.getElementById('email-capture-wrap')) {
       var emailWrap = document.createElement('div');
       emailWrap.id = 'email-capture-wrap';
@@ -429,8 +407,6 @@
       }
     }
   }
-
-  /* ——— Init ——— */
 
   function shouldRestoreCartSnapshot() {
     var href = location.href;
@@ -445,7 +421,6 @@
       window.SeaChips.showToast('Корзина восстановлена');
     }
 
-    /* Восстановление сохранённой корзины только на страницах покупок */
     if (!window.SeaChips.getCart().length && shouldRestoreCartSnapshot()) {
       if (restoreCartSnapshot()) {
         var key = 'seachips:restore-toast';
@@ -459,7 +434,6 @@
     initCheckoutHook();
     initCartEnhancements();
 
-    /* Pre-fill checkout email */
     var emailEl = document.getElementById('email');
     var saved = getSavedEmail();
     if (emailEl && saved && !emailEl.value) {
